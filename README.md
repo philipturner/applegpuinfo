@@ -1,6 +1,6 @@
 # Apple GPU Info
 
-This is a mini-framework for querying parameters of an Apple-designed GPU. It also produces a command-line tool, `gpuinfo`, which reports information similarly to [clinfo](https://github.com/Oblomov/clinfo). It was co-authored with an AI.
+This is a mini-framework for querying parameters of an Apple-designed GPU. It also contains a command-line tool, `gpuinfo`, which reports information similarly to [clinfo](https://github.com/Oblomov/clinfo). It was co-authored with an AI.
 
 Listed parameters:
 - Clock speed ✅
