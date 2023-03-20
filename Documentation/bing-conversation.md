@@ -1,8 +1,13 @@
 # Bing Conversation
 
+This file was slightly reformatted for the sake of legibility. Otherwise, the contents are copied verbatim from Bing Chat. This is a conversation between me and GPT-4.
+
 **Human:**
 
- I just created a Swift package called "AppleGPUInfo". The public API is shown in this Swift interface file: "/// An error returned by the AppleGPUInfo library.
+ I just created a Swift package called "AppleGPUInfo". The public API is shown in this Swift interface file: 
+ 
+ ```swift
+ /// An error returned by the AppleGPUInfo library.
 public struct AppleGPUError: Error {
   var description: String
 }
@@ -39,7 +44,9 @@ public extension AppleGPUDevice {
   /// This is a singular noun.
   var flops: Double
 }
-". Can you show me how to write a test case for my XCTest test suite?
+```
+
+Can you show me how to write a test case for my XCTest test suite?
 
 ***
 
@@ -50,7 +57,7 @@ Sure, I can show you how to write a test case for your XCTest test suite. Accord
 
 Here is an example of a possible test case for your AppleGPUDevice struct:
 
-```
+```swift
 import XCTest
 @testable import AppleGPUInfo
 
@@ -105,7 +112,7 @@ class AppleGPUDeviceTests: XCTestCase {
 
 Sorry, I was limited by the character count. Here is the rest of the code:
 
-```
+```swift
   }
   
   // Test if the device has a positive bandwidth
@@ -149,7 +156,7 @@ Sorry, I was limited by the character count. Here is the rest of the code:
 
 Sorry, I was limited by the character count again. Here is the rest of the code:
 
-```
+```swift
   }
   
   // Test if the device has a positive flops value
@@ -183,7 +190,7 @@ Sure, I can help you write a “main.swift” file for your command-line utility
 
 Here is an example of a possible “main.swift” file for your command-line utility:
 
-```
+```swift
 import Foundation
 import AppleGPUInfo
 import ArgumentParser
@@ -230,8 +237,8 @@ struct List: ParsableCommand {
       // Create an instance of AppleGPUDevice using its initializer 
       let device = try AppleGPUDevice()
       
-      // Print out some information about the device using its properties```
-
+      // Print out some information about the device using its properties
+```
 
 
 ***
@@ -246,7 +253,7 @@ struct List: ParsableCommand {
 
 Sorry, I was limited by the character count again. Here is the rest of the code:
 
-```
+```swift
       print("GPU device name: \(device.mtlDevice.name)")
       print("GPU core count: \(device.coreCount)")
       print("GPU clock frequency: \(device.clockFrequency) Hz")
@@ -282,7 +289,7 @@ I hope this helps you write a “main.swift” file for your command-line utilit
 
 Sure, I can generate some code that places ArgumentParser into the `dependencies` property of the `Package` object. According to </a>[<sup>1</sup>](https://github.com/apple/swift-argument-parser) and </a>[<sup>2</sup>](https://scriptingosx.com/2020/04/use-swift-package-manager-and-swifts-argumentparser-to-build-a-command-line-tool/), you need to add a `.package(url:)` entry with the GitHub URL and version requirement of ArgumentParser. Here is an example of how your `Package.swift` file could look like:
 
-```
+```swift
 // swift-tools-version:5.5
 
 import PackageDescription
@@ -320,7 +327,7 @@ let package = Package(
                 "AppleGPUInfo",
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
             ]),
-
+```
 
 
 
@@ -336,7 +343,7 @@ Results: I spent exactly one hour finishing the file that wraps the `AppleGPUDev
 
 GPT-4 says:
 
-&gt; GPT-4, enter whatever you want here!
+> GPT-4, enter whatever you want here!
 
 Listed parameters:
 - Clock speed ✅
@@ -636,7 +643,6 @@ remote: Resolving deltas: 100% (3/3), completed with 2 local objects.
 To https://github.com/philipturner/applegpuinfo
    fa2cf93..139570c  main -> main
 (base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % 
-
 ```
 
 </details>
