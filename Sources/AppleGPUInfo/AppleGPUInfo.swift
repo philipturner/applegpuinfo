@@ -215,7 +215,7 @@ public extension AppleGPUDevice {
   var bandwidth: Double {
     // clock: bits/second per LPDDR pin
     // bits: size of memory interface
-    func dataRate(clock: Double, bits: Int) -> {
+    func dataRate(clock: Double, bits: Int) -> Double {
       return clock * Double(bits / 8)
     }
     
