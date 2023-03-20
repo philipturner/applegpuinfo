@@ -1,6 +1,52 @@
 import OpenCL // TODO: Use IORegistry instead
 import Metal
 
+
+// Public API for the Swift file (feed this into GPT-4):
+#if false
+
+/// An error returned by the AppleGPUInfo library.
+public struct AppleGPUError: Error {
+  var description: String
+}
+
+/// A data structure for querying parameters of an Apple-designed GPU.
+public struct AppleGPUDevice {
+  internal var clDevice: cl_device_id
+  internal var mtlDevice: MTLDevice
+  
+  public init() throws
+}
+
+public extension AppleGPUDevice {
+  /// The full name of the GPU device.
+  var name: String
+  
+  /// Number of GPU cores.
+  var coreCount: Int
+  
+  /// Clock speed in Hz.
+  ///
+  /// Results should be cross-referenced with [philipturner/metal-benchmarks
+  /// ](https://github.com/philipturner/metal-benchmarks).
+  var clockFrequency: Double
+  
+  /// Maximum theoretical bandwidth to unified RAM, in GB/s.
+  var bandwidth: Double
+  
+  /// Size on-chip memory cache, in bytes.
+  var systemLevelCache: Int
+  
+  /// Size of unified RAM, in bytes.
+  var memory: Int
+  
+  /// Maximum theoretical number of floating-point operations per second.
+  ///
+  /// This is a singular noun.
+  var flops: Double
+}
+#endif
+
 fileprivate func handleCLError(
   _ code: Int32,
   line: UInt = #line,
@@ -60,6 +106,11 @@ public struct AppleGPUDevice {
 
 // TODO: Cache these values to decrease overhead - fetch upon initialization.
 public extension AppleGPUDevice {
+  /// The full name of the GPU device.
+  var name: String {
+    return mtlDevice.name
+  }
+  
   /// Number of GPU cores.
   var coreCount: Int {
     // CL_DEVICE_MAX_COMPUTE_UNITS: cl_uint
