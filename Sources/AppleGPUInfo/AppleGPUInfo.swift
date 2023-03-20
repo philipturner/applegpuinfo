@@ -213,24 +213,30 @@ public extension AppleGPUDevice {
   
   /// Maximum theoretical bandwidth to unified RAM, in bytes/second.
   var bandwidth: Double {
+    // clock: bits/second per LPDDR pin
+    // bits: size of memory interface
+    func dataRate(clock: Double, bits: Int) -> {
+      return clock * Double(bits / 8)
+    }
+    
     switch generation {
     case 1:
       switch tier {
-      case .base: return 68.2e9
-      case .pro: return 200e9
-      case .max: return 400e9
-      case .ultra: return 800e9
-      case .unknown: return 800e9
+      case .base: return dataRate(clock: 4.266e9, 128)
+      case .pro: return dataRate(clock: 6.400e9, 256)
+      case .max: return dataRate(clock: 6.400e9, 512)
+      case .ultra: return dataRate(clock: 6.400e9, 1024)
+      case .unknown: return dataRate(clock: 6.400e9, 1024)
       }
     case 2:
       fallthrough
     default:
       switch tier {
-      case .base: return 100e9
-      case .pro: return 200e9
-      case .max: return 400e9
-      case .ultra: return 800e9
-      case .unknown: return 800e9
+      case .base: return dataRate(clock: 6.400e9, 128)
+      case .pro: return dataRate(clock: 6.400e9, 256)
+      case .max: return dataRate(clock: 6.400e9, 512)
+      case .ultra: return dataRate(clock: 6.400e9, 1024)
+      case .unknown: return dataRate(clock: 6.400e9, 1024)
       }
     }
   }
