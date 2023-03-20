@@ -12,7 +12,7 @@ Listed parameters:
 - Memory ✅
 - Family: ✅
 
-TODO: Deploy to Homebrew and Swift Package Registry, port to iOS.
+TODO: Deploy to Homebrew and Swift Package Registry, port to iOS, release v1.0.1.
 
 ## Methodology
 
