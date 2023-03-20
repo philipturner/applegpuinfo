@@ -320,7 +320,7 @@ let package = Package(
                 "AppleGPUInfo",
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
             ]),
-```
+
 
 
 
@@ -371,3 +371,272 @@ My mistake, I can’t give a response to that right now. Let’s try a different
 ***
 
 Exported on March 19, 2023 11:28 PM.
+
+---
+
+# Command-Line Workflow
+
+I built this package from scratch in under two hours. To make the process fully reproducible, I pasted everything I entered into the command-line during the process.
+
+<details>
+<summary>Command-line workflow</summary>
+
+```
+Last login: Sun Mar 19 17:21:41 on ttys001
+(base) philipturner@M1-Max-MacBook-Pro ~ % cd Desktop
+(base) philipturner@M1-Max-MacBook-Pro Desktop % git clone https://github.com/philipturner/applegpuinfo
+Cloning into 'applegpuinfo'...
+remote: Enumerating objects: 11, done.
+remote: Counting objects: 100% (11/11), done.
+remote: Compressing objects: 100% (10/10), done.
+remote: Total 11 (delta 2), reused 0 (delta 0), pack-reused 0
+Receiving objects: 100% (11/11), done.
+Resolving deltas: 100% (2/2), done.
+(base) philipturner@M1-Max-MacBook-Pro Desktop % cd applegpuinfo
+(base) philipturner@M1-Max-MacBook-Pro applegpuinfo % cd ../
+(base) philipturner@M1-Max-MacBook-Pro Desktop % mv -r applegpuinfo AppleGPUInfo
+mv: illegal option -- r
+usage: mv [-f | -i | -n] [-hv] source target
+       mv [-f | -i | -n] [-v] source ... directory
+(base) philipturner@M1-Max-MacBook-Pro Desktop % mv -f applegpuinfo AppleGPUInfo
+(base) philipturner@M1-Max-MacBook-Pro Desktop % cd AppleGPUInfo
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % ls
+LICENSE		README.md
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % git push
+Everything up-to-date
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % swift package init
+Creating library package: AppleGPUInfo
+Creating Package.swift
+Creating Sources/
+Creating Sources/AppleGPUInfo/AppleGPUInfo.swift
+Creating Tests/
+Creating Tests/AppleGPUInfoTests/
+Creating Tests/AppleGPUInfoTests/AppleGPUInfoTests.swift
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % git push
+Everything up-to-date
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % swift build
+warning: 'applegpuinfo': 'AppleGPUInfoTool' was identified as an executable target given the presence of a 'main.swift' file. Starting with tools version 5.4.0 executable targets should be declared as 'executableTarget()'
+Building for debugging...
+[5/5] Linking AppleGPUInfoTool
+Build complete! (5.46s)
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % swift build
+Building for debugging...
+Build complete! (0.48s)
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % swift test
+Building for debugging...
+[3/3] Linking AppleGPUInfoPackageTests
+Build complete! (4.91s)
+Test Suite 'All tests' started at 2023-03-19 22:59:50.601
+Test Suite 'AppleGPUInfoPackageTests.xctest' started at 2023-03-19 22:59:50.601
+Test Suite 'AppleGPUInfoTests' started at 2023-03-19 22:59:50.602
+Test Case '-[AppleGPUInfoTests.AppleGPUInfoTests testDeviceParameters]' started.
+Test Case '-[AppleGPUInfoTests.AppleGPUInfoTests testDeviceParameters]' passed (0.002 seconds).
+Test Suite 'AppleGPUInfoTests' passed at 2023-03-19 22:59:50.604.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.002 (0.002) seconds
+Test Suite 'AppleGPUInfoPackageTests.xctest' passed at 2023-03-19 22:59:50.604.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.002 (0.002) seconds
+Test Suite 'All tests' passed at 2023-03-19 22:59:50.604.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.002 (0.003) seconds
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % git status
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	new file:   Sources/AppleGPUInfoTool/main.swift
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   README.md
+	modified:   Sources/AppleGPUInfoTool/main.swift
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	.swiftpm/
+	Package.swift
+	Sources/AppleGPUInfo/
+	Tests/
+
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % vim .gitignore
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % git status    
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	new file:   Sources/AppleGPUInfoTool/main.swift
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   .gitignore
+	modified:   README.md
+	modified:   Sources/AppleGPUInfoTool/main.swift
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	Package.swift
+	Sources/AppleGPUInfo/
+	Tests/
+
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % git add .
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % git commit -m "Initial commit"
+[main fa2cf93] Initial commit
+ 6 files changed, 314 insertions(+), 1 deletion(-)
+ create mode 100644 Package.swift
+ create mode 100644 Sources/AppleGPUInfo/AppleGPUInfo.swift
+ create mode 100644 Sources/AppleGPUInfoTool/main.swift
+ create mode 100644 Tests/AppleGPUInfoTests/AppleGPUInfoTests.swift
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % git push
+Enumerating objects: 16, done.
+Counting objects: 100% (16/16), done.
+Delta compression using up to 10 threads
+Compressing objects: 100% (10/10), done.
+Writing objects: 100% (13/13), 4.00 KiB | 4.00 MiB/s, done.
+Total 13 (delta 1), reused 0 (delta 0), pack-reused 0
+remote: Resolving deltas: 100% (1/1), completed with 1 local object.
+To https://github.com/philipturner/applegpuinfo
+   298d255..fa2cf93  main -> main
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % swift buiild
+error: unable to invoke subcommand: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-buiild (No such file or directory)
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % swift build
+Fetching https://github.com/apple/swift-argument-parser from cache
+Fetched https://github.com/apple/swift-argument-parser (0.33s)
+Creating working copy for https://github.com/apple/swift-argument-parser
+Working copy of https://github.com/apple/swift-argument-parser resolved at main
+[1/1] Planning buildCompiling plugin GenerateManual...
+Building for debugging...
+[49/49] Linking gpuinfo
+Build complete! (5.39s)
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % swift test
+Compiling plugin GenerateManual...
+Building for debugging...
+[3/3] Linking AppleGPUInfoPackageTests
+Build complete! (0.50s)
+Test Suite 'All tests' started at 2023-03-19 23:20:45.156
+Test Suite 'AppleGPUInfoPackageTests.xctest' started at 2023-03-19 23:20:45.157
+Test Suite 'AppleGPUDeviceTests' started at 2023-03-19 23:20:45.157
+Test Case '-[AppleGPUInfoTests.AppleGPUDeviceTests testBandwidthIsPositive]' started.
+Test Case '-[AppleGPUInfoTests.AppleGPUDeviceTests testBandwidthIsPositive]' passed (0.033 seconds).
+Test Case '-[AppleGPUInfoTests.AppleGPUDeviceTests testClockFrequencyIsValid]' started.
+Test Case '-[AppleGPUInfoTests.AppleGPUDeviceTests testClockFrequencyIsValid]' passed (0.000 seconds).
+Test Case '-[AppleGPUInfoTests.AppleGPUDeviceTests testCoreCountIsPositive]' started.
+Test Case '-[AppleGPUInfoTests.AppleGPUDeviceTests testCoreCountIsPositive]' passed (0.000 seconds).
+Test Case '-[AppleGPUInfoTests.AppleGPUDeviceTests testFlopsIsPositive]' started.
+Test Case '-[AppleGPUInfoTests.AppleGPUDeviceTests testFlopsIsPositive]' passed (0.000 seconds).
+Test Case '-[AppleGPUInfoTests.AppleGPUDeviceTests testMemoryIsPositive]' started.
+Test Case '-[AppleGPUInfoTests.AppleGPUDeviceTests testMemoryIsPositive]' passed (0.000 seconds).
+Test Case '-[AppleGPUInfoTests.AppleGPUDeviceTests testSystemLevelCacheIsPositive]' started.
+Test Case '-[AppleGPUInfoTests.AppleGPUDeviceTests testSystemLevelCacheIsPositive]' passed (0.000 seconds).
+Test Suite 'AppleGPUDeviceTests' passed at 2023-03-19 23:20:45.191.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.034 (0.034) seconds
+Test Suite 'AppleGPUInfoTests' started at 2023-03-19 23:20:45.192
+Test Case '-[AppleGPUInfoTests.AppleGPUInfoTests testDeviceParameters]' started.
+Test Case '-[AppleGPUInfoTests.AppleGPUInfoTests testDeviceParameters]' passed (0.000 seconds).
+Test Suite 'AppleGPUInfoTests' passed at 2023-03-19 23:20:45.192.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'AppleGPUInfoPackageTests.xctest' passed at 2023-03-19 23:20:45.192.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.034 (0.035) seconds
+Test Suite 'All tests' passed at 2023-03-19 23:20:45.192.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.034 (0.035) seconds
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % ls
+LICENSE			Package.swift		Sources
+Package.resolved	README.md		Tests
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % ls .build
+arm64-apple-macosx	debug			repositories
+artifacts		debug.yaml		workspace-state.json
+checkouts		plugins
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % ls .build/debug
+AppleGPUInfo.abi.json			AppleGPUInfoTool.swiftsourceinfo
+AppleGPUInfo.build			ArgumentParser.abi.json
+AppleGPUInfo.swiftdoc			ArgumentParser.build
+AppleGPUInfo.swiftmodule		ArgumentParser.swiftdoc
+AppleGPUInfo.swiftsourceinfo		ArgumentParser.swiftmodule
+AppleGPUInfoPackageTests.product	ArgumentParser.swiftsourceinfo
+AppleGPUInfoPackageTests.xctest		ArgumentParserToolInfo.abi.json
+AppleGPUInfoTests.abi.json		ArgumentParserToolInfo.build
+AppleGPUInfoTests.build			ArgumentParserToolInfo.swiftdoc
+AppleGPUInfoTests.swiftdoc		ArgumentParserToolInfo.swiftmodule
+AppleGPUInfoTests.swiftmodule		ArgumentParserToolInfo.swiftsourceinfo
+AppleGPUInfoTests.swiftsourceinfo	ModuleCache
+AppleGPUInfoTool			description.json
+AppleGPUInfoTool.abi.json		generate-manual.product
+AppleGPUInfoTool.build			gpuinfo
+AppleGPUInfoTool.product		gpuinfo.product
+AppleGPUInfoTool.swiftdoc		index
+AppleGPUInfoTool.swiftmodule
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % ./build/debug/gpuinfo
+zsh: no such file or directory: ./build/debug/gpuinfo
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % ls .build
+arm64-apple-macosx	debug			repositories
+artifacts		debug.yaml		workspace-state.json
+checkouts		plugins
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % ls .build/debug
+AppleGPUInfo.abi.json			AppleGPUInfoTool.swiftsourceinfo
+AppleGPUInfo.build			ArgumentParser.abi.json
+AppleGPUInfo.swiftdoc			ArgumentParser.build
+AppleGPUInfo.swiftmodule		ArgumentParser.swiftdoc
+AppleGPUInfo.swiftsourceinfo		ArgumentParser.swiftmodule
+AppleGPUInfoPackageTests.product	ArgumentParser.swiftsourceinfo
+AppleGPUInfoPackageTests.xctest		ArgumentParserToolInfo.abi.json
+AppleGPUInfoTests.abi.json		ArgumentParserToolInfo.build
+AppleGPUInfoTests.build			ArgumentParserToolInfo.swiftdoc
+AppleGPUInfoTests.swiftdoc		ArgumentParserToolInfo.swiftmodule
+AppleGPUInfoTests.swiftmodule		ArgumentParserToolInfo.swiftsourceinfo
+AppleGPUInfoTests.swiftsourceinfo	ModuleCache
+AppleGPUInfoTool			description.json
+AppleGPUInfoTool.abi.json		generate-manual.product
+AppleGPUInfoTool.build			gpuinfo
+AppleGPUInfoTool.product		gpuinfo.product
+AppleGPUInfoTool.swiftdoc		index
+AppleGPUInfoTool.swiftmodule
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % ls .build/debug/gpuinfo
+.build/debug/gpuinfo
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % .build/debug/gpuinfo 
+OVERVIEW: A Swift-based tool for displaying information about Apple GPUs.
+
+This tool is similar to clinfo (https://github.com/Oblomov/clinfo),
+but it only works for Apple GPUs on macOS and iOS devices.
+It uses OpenCL and Metal APIs to query various parameters of the GPU device,
+such as core count, clock frequency, bandwidth, memory size, etc.
+
+USAGE: gpuinfo <subcommand>
+
+OPTIONS:
+  -h, --help              Show help information.
+
+SUBCOMMANDS:
+  list                    List all available GPU devices.
+
+  See 'gpuinfo help <subcommand>' for detailed help.
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % .build/debug/gpuinfo list
+GPU device name: Apple M1 Max
+GPU core count: 32
+GPU clock frequency: 1296000000.0 Hz
+GPU bandwidth: 400.0 GB/s
+GPU system level cache: 50331648 bytes
+GPU memory: 34359738368 bytes
+GPU flops: 10616832000000.0 FLOPS
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % git add .
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % git commit -m "[Co-authored with GPT-4] Make the package"
+[main 139570c] [Co-authored with GPT-4] Make the package
+ 8 files changed, 602 insertions(+), 11 deletions(-)
+ create mode 100644 Documentation/bing-conversation.md
+ create mode 100644 Documentation/bing-screenshot.png
+ create mode 100644 Package.resolved
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % git push
+Enumerating objects: 27, done.
+Counting objects: 100% (27/27), done.
+Delta compression using up to 10 threads
+Compressing objects: 100% (13/13), done.
+Writing objects: 100% (16/16), 1.11 MiB | 6.92 MiB/s, done.
+Total 16 (delta 3), reused 0 (delta 0), pack-reused 0
+remote: Resolving deltas: 100% (3/3), completed with 2 local objects.
+To https://github.com/philipturner/applegpuinfo
+   fa2cf93..139570c  main -> main
+(base) philipturner@M1-Max-MacBook-Pro AppleGPUInfo % 
+
+```
+
+</details>
