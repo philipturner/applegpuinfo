@@ -38,7 +38,7 @@ public extension AppleGPUDevice {
   /// This is a singular noun.
   var flops: Double
   
-  /// Size on-chip memory cache, in bytes.
+  /// Size of on-chip memory cache, in bytes.
   var systemLevelCache: Int
   
   /// Size of unified RAM, in bytes.
@@ -243,7 +243,7 @@ public extension AppleGPUDevice {
     return Double(operationsPerClock) * clockFrequency
   }
   
-  /// Size on-chip memory cache, in bytes.
+  /// Size of on-chip memory cache, in bytes.
   var systemLevelCache: Int {
     let megabyte = 1024 * 1024
     
