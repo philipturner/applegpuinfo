@@ -20,7 +20,7 @@ Original Goal: In one hour, finish a mini-package and command-line tool for quer
 
 Results: I spent 57 minutes finishing the file that wraps the `AppleGPUDevice` structure. I asked GPT-4 to generate the tests and command-line tool. I renamed the command-line tool from `applegpuinfo` to `gpuinfo` according to the AI's suggestion. Finally, I congratulated it and asked for it to leave a comment to users on the README. That triggered a safeguard and it quit the conversation. The stop time was 1 hour, 25 minutes.
 
-Methodology: [bing-conversation.md](./Documentation/bing-conversation.md)
+Documentation of AI contributions: [bing-conversation.md](./Documentation/bing-conversation.md)
 
 ## Attribution
 
