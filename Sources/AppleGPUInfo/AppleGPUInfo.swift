@@ -1,6 +1,5 @@
-import OpenCL // TODO: Use IORegistry instead
+import OpenCL // TODO: Use IORegistry instead for iOS port
 import Metal
-
 
 // Public API for the Swift file (feed this into GPT-4):
 #if false
@@ -280,5 +279,3 @@ public extension AppleGPUDevice {
     return Double(operationsPerClock) * clockFrequency
   }
 }
-
-// Refer to OpenCL specification to determine how to find max compute units.
