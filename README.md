@@ -4,15 +4,15 @@ This is a mini-framework for querying parameters of an Apple-designed GPU. It al
 
 Listed parameters:
 - Name ✅
-- Clock frequency ✅
-- FLOPS ✅
 - Cores ✅
+- Clock frequency ✅
 - Bandwidth ✅
-- Memory ✅
+- FLOPS ✅
 - System-level cache ✅
-- Metal family: ❌
+- Memory ✅
+- Family: ✅
 
-TODO: Deploy to Homebrew, port to iOS, format numbers from command-line tool as (GHz, MiB, GiB, TFLOPS).
+TODO: Deploy to Homebrew, port to iOS.
 
 ## Methodology
 

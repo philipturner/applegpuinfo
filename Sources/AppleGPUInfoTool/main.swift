@@ -18,6 +18,7 @@ import AppleGPUInfo
 import Foundation
 import AppleGPUInfo
 import ArgumentParser
+import Metal
 
 // Define a struct that conforms to ParsableCommand protocol
 struct GPUInfo: ParsableCommand {
@@ -70,11 +71,19 @@ struct List: ParsableCommand {
       // I changed the public API so that it provided a name.
       print("GPU device name: \(device.name)")
       print("GPU core count: \(device.coreCount)")
-      print("GPU clock frequency: \(device.clockFrequency) Hz")
-      print("GPU bandwidth: \(device.bandwidth) GB/s")
-      print("GPU system level cache: \(device.systemLevelCache) bytes")
-      print("GPU memory: \(device.memory) bytes")
-      print("GPU flops: \(device.flops) FLOPS")
+      print("GPU clock frequency: \(device.clockFrequency / 1e9) GHz")
+      print("GPU bandwidth: \(device.bandwidth / 1e9) GB/s")
+      print("GPU flops: \(rint(device.flops / 1e9) / 1e3) TFLOPS")
+      
+      let megabyte = 1024 * 1024
+      let gigabyte = 1024 * 1024 * 1024
+      let slc = device.systemLevelCache / megabyte
+      print("GPU system level cache: \(slc) MB")
+      print("GPU memory: \(device.memory / gigabyte) GB")
+      
+      // Print the Metal GPU family
+      let delta = device.family.rawValue - MTLGPUFamily.apple7.rawValue
+      print("GPU family: Apple \(delta + 7)")
     } catch {
       // Handle any errors that may occur
       print("Error: \(error.localizedDescription)")

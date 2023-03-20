@@ -34,6 +34,15 @@ class AppleGPUDeviceTests: XCTestCase {
     super.tearDown()
   }
   
+  // Test if the name is valid
+  func testNameIsValid() {
+    // Act: get the name property
+    let name = device.name
+    
+    // Assert: check that the name contains "Apple M"
+    XCTAssertEqual(name.prefix(7), "Apple M")
+  }
+  
   // Test if the device has a positive core count
   func testCoreCountIsPositive() {
     // Act: get the core count property
@@ -62,6 +71,15 @@ class AppleGPUDeviceTests: XCTestCase {
     XCTAssertGreaterThan(bandwidth, 0, "Bandwidth should be positive.")
   }
   
+  // Test if the device has a positive flops value
+  func testFlopsIsPositive() {
+    // Act: get the flops property
+    let flops = device.flops
+    
+    // Assert: check if it is greater than zero
+    XCTAssertGreaterThan(flops, 0, "Flops should be positive.")
+  }
+  
   // Test if the device has a positive system level cache size
   func testSystemLevelCacheIsPositive() {
     // Act: get the system level cache property
@@ -80,12 +98,14 @@ class AppleGPUDeviceTests: XCTestCase {
     XCTAssertGreaterThan(memory, 0, "Memory should be positive.")
   }
   
-  // Test if the device has a positive flops value
-  func testFlopsIsPositive() {
-    // Act: get the flops property
-    let flops = device.flops
+  // Test if the family is valid
+  func testFamilyIsValid() {
+    // Act: get the family property
+    let family = device.family
     
-    // Assert: check if it is greater than zero
-    XCTAssertGreaterThan(flops, 0, "Flops should be positive.")
+    // Assert: check if it is at least Apple 7
+    let reference = MTLGPUFamily.apple7.rawValue
+    XCTAssertGreaterThanOrEqual(family.rawValue, reference)
+    
   }
 }

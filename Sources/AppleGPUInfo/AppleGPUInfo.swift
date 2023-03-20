@@ -30,8 +30,13 @@ public extension AppleGPUDevice {
   /// ](https://github.com/philipturner/metal-benchmarks).
   var clockFrequency: Double
   
-  /// Maximum theoretical bandwidth to unified RAM, in GB/s.
+  /// Maximum theoretical bandwidth to unified RAM, in bytes/second.
   var bandwidth: Double
+  
+  /// Maximum theoretical number of floating-point operations per second.
+  ///
+  /// This is a singular noun.
+  var flops: Double
   
   /// Size on-chip memory cache, in bytes.
   var systemLevelCache: Int
@@ -39,10 +44,8 @@ public extension AppleGPUDevice {
   /// Size of unified RAM, in bytes.
   var memory: Int
   
-  /// Maximum theoretical number of floating-point operations per second.
-  ///
-  /// This is a singular noun.
-  var flops: Double
+  /// Metal GPU family.
+  var family: MTLGPUFamily
 }
 #endif
 
@@ -208,28 +211,36 @@ public extension AppleGPUDevice {
     }
   }
   
-  /// Maximum theoretical bandwidth to unified RAM, in GB/s.
+  /// Maximum theoretical bandwidth to unified RAM, in bytes/second.
   var bandwidth: Double {
     switch generation {
     case 1:
       switch tier {
-      case .base: return 68.2
-      case .pro: return 200
-      case .max: return 400
-      case .ultra: return 800
-      case .unknown: return 800
+      case .base: return 68.2e9
+      case .pro: return 200e9
+      case .max: return 400e9
+      case .ultra: return 800e9
+      case .unknown: return 800e9
       }
     case 2:
       fallthrough
     default:
       switch tier {
-      case .base: return 100
-      case .pro: return 200
-      case .max: return 400
-      case .ultra: return 800
-      case .unknown: return 800
+      case .base: return 100e9
+      case .pro: return 200e9
+      case .max: return 400e9
+      case .ultra: return 800e9
+      case .unknown: return 800e9
       }
     }
+  }
+  
+  /// Maximum theoretical number of floating-point operations per second.
+  ///
+  /// This is a singular noun.
+  var flops: Double {
+    let operationsPerClock = self.coreCount * 128 * 2
+    return Double(operationsPerClock) * clockFrequency
   }
   
   /// Size on-chip memory cache, in bytes.
@@ -271,11 +282,17 @@ public extension AppleGPUDevice {
     return memorySize
   }
   
-  /// Maximum theoretical number of floating-point operations per second.
-  ///
-  /// This is a singular noun.
-  var flops: Double {
-    let operationsPerClock = self.coreCount * 128 * 2
-    return Double(operationsPerClock) * clockFrequency
+  /// Metal GPU family.
+  var family: MTLGPUFamily {
+    // TODO: Recognize more than just Apple 7/8 when porting to iOS.
+    var maxRecognized: MTLGPUFamily = .apple8
+    while maxRecognized.rawValue >= 0 {
+      if mtlDevice.supportsFamily(maxRecognized) {
+        break
+      } else {
+        maxRecognized = .init(rawValue: maxRecognized.rawValue - 1)!
+      }
+    }
+    return maxRecognized
   }
 }
