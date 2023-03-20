@@ -222,21 +222,21 @@ public extension AppleGPUDevice {
     switch generation {
     case 1:
       switch tier {
-      case .base: return dataRate(clock: 4.266e9, 128)
-      case .pro: return dataRate(clock: 6.400e9, 256)
-      case .max: return dataRate(clock: 6.400e9, 512)
-      case .ultra: return dataRate(clock: 6.400e9, 1024)
-      case .unknown: return dataRate(clock: 6.400e9, 1024)
+      case .base: return dataRate(clock: 4.266e9, bits: 128)
+      case .pro: return dataRate(clock: 6.400e9, bits: 256)
+      case .max: return dataRate(clock: 6.400e9, bits: 512)
+      case .ultra: return dataRate(clock: 6.400e9, bits: 1024)
+      case .unknown: return dataRate(clock: 6.400e9, bits: 1024)
       }
     case 2:
       fallthrough
     default:
       switch tier {
-      case .base: return dataRate(clock: 6.400e9, 128)
-      case .pro: return dataRate(clock: 6.400e9, 256)
-      case .max: return dataRate(clock: 6.400e9, 512)
-      case .ultra: return dataRate(clock: 6.400e9, 1024)
-      case .unknown: return dataRate(clock: 6.400e9, 1024)
+      case .base: return dataRate(clock: 6.400e9, bits: 128)
+      case .pro: return dataRate(clock: 6.400e9, bits: 256)
+      case .max: return dataRate(clock: 6.400e9, bits: 512)
+      case .ultra: return dataRate(clock: 6.400e9, bits: 1024)
+      case .unknown: return dataRate(clock: 6.400e9, bits: 1024)
       }
     }
   }
