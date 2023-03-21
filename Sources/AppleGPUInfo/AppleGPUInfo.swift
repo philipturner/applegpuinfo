@@ -78,7 +78,7 @@ fileprivate func handleIORegistryError(
 /// An error returned by the AppleGPUInfo library.
 public class AppleGPUError: Error {
   /// Retrieve the description for this error.
-  var description: String
+  let description: String
   
   /// Initialize the error object.
   public init(description: String) {
@@ -88,18 +88,18 @@ public class AppleGPUError: Error {
 
 /// A data structure for querying parameters of an Apple-designed GPU.
 public class AppleGPUDevice {
-  internal var mtlDevice: MTLDevice
-  internal var gpuEntry: io_registry_entry_t
+  internal let mtlDevice: MTLDevice
+  internal let gpuEntry: io_registry_entry_t
   
   // Cached values to decrease retrieval overhead.
-  private var _name: String
-  private var _coreCount: Int
-  private var _clockFrequency: Double
-  private var _bandwidth: Double
-  private var _flops: Double
-  private var _systemLevelCache: Int
-  private var _memory: Int
-  private var _family: MTLGPUFamily
+  private let _name: String
+  private let _coreCount: Int
+  private let _clockFrequency: Double
+  private let _bandwidth: Double
+  private let _flops: Double
+  private let _systemLevelCache: Int
+  private let _memory: Int
+  private let _family: MTLGPUFamily
   
   /// Initialize the device object.
   public init() throws {
@@ -379,7 +379,9 @@ public extension AppleGPUDevice {
 
 // C API - exported symbols loadable from the dylib.
 // TODO: Make tests for this, finish bindings the AppleGPUDevice object.
+// TODO: Make a test script that loads the dylib object.
 
+/// Initialize the error object.
 @_cdecl("AppleGPUError_init")
 @usableFromInline
 internal func AppleGPUError_init(
@@ -396,6 +398,7 @@ internal func AppleGPUError_init(
   return unmanagedError.toOpaque()
 }
 
+/// Deinitialize the error object.
 @_cdecl("AppleGPUError_deinit")
 @usableFromInline
 internal func AppleGPUError_deinit(
@@ -408,6 +411,7 @@ internal func AppleGPUError_deinit(
   unmanagedError.release()
 }
 
+/// The description of the error.
 @_cdecl("AppleGPUError_description")
 @usableFromInline
 internal func AppleGPUError_description(
@@ -419,12 +423,137 @@ internal func AppleGPUError_description(
   // Get a Swift class reference to unmanagedError
   let error = unmanagedError.takeUnretainedValue()
   
+  // Return permanent backing buffer for the string
   return error.description.withCString { $0 }
+}
+
+/// Initialize the device object.
+@_cdecl("AppleGPUDevice_init")
+@usableFromInline
+internal func AppleGPUDevice_init(
+  _ pointerError: UnsafeMutablePointer<UnsafeMutableRawPointer>
+) -> UnsafeMutableRawPointer? {
+  var device: AppleGPUDevice
+  
+  do {
+    // Create a Swift class object
+    device = try AppleGPUDevice()
+  } catch let error as AppleGPUError {
+    // Convert the error to an unsafe reference with +1 retain count
+    let unmanagedError = Unmanaged.passRetained(error)
+
+    // Get an UnsafeMutablePointer from unmanagedError
+    pointerError.pointee = unmanagedError.toOpaque()
+    
+    // Return early.
+    return nil
+  } catch {
+    fatalError("This should never happen!")
+  }
+
+  // Convert it to an unsafe reference with +1 retain count
+  let unmanagedDevice = Unmanaged.passRetained(device)
+
+  // Get an UnsafeMutablePointer from unmanagedDevice
+  return unmanagedDevice.toOpaque()
+}
+
+/// Deinitialize the device object.
+@_cdecl("AppleGPUDevice_deinit")
+@usableFromInline
+internal func AppleGPUDevice_deinit(
+  _ pointerDevice: UnsafeMutableRawPointer
+) {
+  // Get an unmanaged reference from pointerDevice
+  let unmanagedDevice = Unmanaged<AppleGPUError>.fromOpaque(pointerDevice)
+  
+  // Release the object referenced by pointerDevice
+  unmanagedDevice.release()
+}
+
+/// The full name of the GPU device.
+@_cdecl("AppleGPUDevice_name")
+@usableFromInline
+internal func AppleGPUDevice_name(
+  _ pointerDevice: UnsafeMutableRawPointer
+) -> UnsafePointer<CChar> {
+  // Get an unmanaged reference from pointerDevice
+  let unmanagedDevice = Unmanaged<AppleGPUDevice>.fromOpaque(pointerDevice)
+
+  // Get a Swift class object from unmanagedDevice
+  let device = unmanagedDevice.takeUnretainedValue()
+  
+  // Return permanent backing buffer for the string
+  return device.name.withCString { $0 }
+}
+
+/// Number of GPU cores.
+@_cdecl("AppleGPUDevice_coreCount")
+@usableFromInline
+internal func AppleGPUDevice_coreCount(
+  _ pointerDevice: UnsafeMutableRawPointer
+) -> Int64 {
+  // Get an unmanaged reference from pointerDevice
+  let unmanagedDevice = Unmanaged<AppleGPUDevice>.fromOpaque(pointerDevice)
+
+  // Get a Swift class object from unmanagedDevice
+  let device = unmanagedDevice.takeUnretainedValue()
+  
+  // Return the core count.
+  return Int64(device.coreCount)
+}
+
+/// Clock speed in Hz.
+@_cdecl("AppleGPUDevice_clockFrequency")
+@usableFromInline
+internal func AppleGPUDevice_clockFrequency(
+  _ pointerDevice: UnsafeMutableRawPointer
+) -> Double {
+  // Get an unmanaged reference from pointerDevice
+  let unmanagedDevice = Unmanaged<AppleGPUDevice>.fromOpaque(pointerDevice)
+
+  // Get a Swift class object from unmanagedDevice
+  let device = unmanagedDevice.takeUnretainedValue()
+  
+  // Return the clock frequency.
+  return Double(device.clockFrequency)
+}
+
+/// Maximum theoretical bandwidth to unified RAM, in bytes/second.
+@_cdecl("AppleGPUDevice_bandwidth")
+@usableFromInline
+internal func AppleGPUDevice_bandwidth(
+  _ pointerDevice: UnsafeMutableRawPointer
+) -> Double {
+  // Get an unmanaged reference from pointerDevice
+  let unmanagedDevice = Unmanaged<AppleGPUDevice>.fromOpaque(pointerDevice)
+
+  // Get a Swift class object from unmanagedDevice
+  let device = unmanagedDevice.takeUnretainedValue()
+  
+  // Return the bandwidth.
+  return Double(device.bandwidth)
+}
+
+/// Maximum theoretical number of floating-point operations per second.
+@_cdecl("AppleGPUDevice_flops")
+@usableFromInline
+internal func AppleGPUDevice_flops(
+  _ pointerDevice: UnsafeMutableRawPointer
+) -> Double {
+  // Get an unmanaged reference from pointerDevice
+  let unmanagedDevice = Unmanaged<AppleGPUDevice>.fromOpaque(pointerDevice)
+
+  // Get a Swift class object from unmanagedDevice
+  let device = unmanagedDevice.takeUnretainedValue()
+  
+  // Return the FLOPS.
+  return Double(device.flops)
 }
 
 //#if false
 //// Initialize the device object.
-//AppleGPUDevice *AppleGPUDevice_init(AppleGPUError *error);
+//AppleGPUDevice *AppleGPUDevice_init(AppleGPUError **error);
 //
 //// Free the device object.
 //void AppleGPUDevice_free(AppleGPUDevice *device);
