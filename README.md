@@ -25,5 +25,3 @@ Documentation of AI contributions: [bing-conversation.md](./Documentation/bing-c
 ## Attribution
 
 This project was made possible by [GPT-4](https://openai.com/research/gpt-4), accessed through Bing Chat.
-
-TODO: Experiment with custom "MIT-LLM" license that requires you to copy the chat history (in a legible format) used to generate the code, alongside the license.
