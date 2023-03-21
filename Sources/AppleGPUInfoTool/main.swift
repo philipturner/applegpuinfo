@@ -32,7 +32,7 @@ struct GPUInfo: ParsableCommand {
     discussion: """
       This tool is similar to clinfo (https://github.com/Oblomov/clinfo),
       but it only works for Apple GPUs on macOS and iOS devices.
-      It uses OpenCL and Metal APIs to query various parameters of the GPU device,
+      It uses Metal and IOKit APIs to query various parameters of the GPU device,
       such as core count, clock frequency, bandwidth, memory size, etc.
       """,
     // An array of subcommands that this command can run
