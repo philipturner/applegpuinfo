@@ -22,6 +22,8 @@ Results: I spent 57 minutes finishing the file that wraps the `AppleGPUDevice` s
 
 Documentation of AI contributions: [bing-conversation.md](./Documentation/bing-conversation.md)
 
+After creating the first release of the library, I have continued experimenting with workflows accelerated by _free_ access to GPT-4. The above document details these subsequent modifications to the library.
+
 ## Attribution
 
 This project was made possible by [GPT-4](https://openai.com/research/gpt-4), accessed through Bing Chat.
