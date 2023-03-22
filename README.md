@@ -14,6 +14,43 @@ Listed parameters:
 
 TODO: Deploy to Homebrew and Swift Package Registry, port to iOS, release v1.0.1.
 
+## Usage
+
+One way to use this library is from the command-line:
+
+```
+git clone https://github.com/philipturner/applegpuinfo
+cd applegpuinfo
+swift run gpuinfo list
+
+# Sample output
+GPU name: Apple M1 Max
+GPU core count: 32
+GPU clock frequency: 1.296 GHz
+GPU bandwidth: 409.6 GB/s
+GPU FLOPS: 10.617 TFLOPS
+GPU system level cache: 48 MB
+GPU memory: 32 GB
+GPU family: Apple 7
+```
+
+You can also use it directly from Swift:
+
+```swift
+// Inside package manifest
+dependencies: [
+  // Dependencies declare other packages that this package depends on.
+  .package(url: "https://github.com/philipturner/applegpuinfo", branch: "main"),
+],
+
+// Inside source code
+import AppleGPUInfo
+
+let gpuDevice = AppleGPUDevice()
+print(gpuDevice.flops)
+print(gpuDevice.bandwidth)
+```
+
 ## Methodology
 
 Original Goal: In one hour, finish a mini-package and command-line tool for querying Apple GPU device parameters.
