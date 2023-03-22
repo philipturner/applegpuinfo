@@ -1,5 +1,9 @@
 import Metal
+#if os(macOS)
 import IOKit
+#else
+import DeviceKit
+#endif
 
 // Public API for the Swift file (feed this into GPT-4):
 #if false
@@ -7,7 +11,7 @@ import IOKit
 /// An error returned by the AppleGPUInfo library.
 public class AppleGPUError: Error {
   /// Retrieve the description for this error.
-  var description: String
+  public var description: String
   
   /// Initialize the error object.
   public init(description: String)
@@ -37,7 +41,8 @@ public extension AppleGPUDevice {
   
   /// Maximum theoretical number of floating-point operations per second.
   ///
-  /// This is a singular noun.
+  /// The number of FP32 operations performed through fused muliply-add each
+  /// second. This is a singular noun.
   var flops: Double
   
   /// Size of on-chip memory cache, in bytes.
@@ -78,18 +83,31 @@ fileprivate func handleIORegistryError(
 /// An error returned by the AppleGPUInfo library.
 public class AppleGPUError: Error {
   /// Retrieve the description for this error.
-  let description: String
+  public let description: String
+  
+  /// For compatibility with the C API, store an explicit C string.
+  internal let _cDescripton: UnsafeMutablePointer<CChar>
   
   /// Initialize the error object.
   public init(description: String) {
     self.description = description
+    self._cDescripton = .allocate(capacity: description.count)
+    strcpy(_cDescripton, description)
+  }
+  
+  deinit {
+    _cDescripton.deallocate()
   }
 }
 
 /// A data structure for querying parameters of an Apple-designed GPU.
 public class AppleGPUDevice {
   internal let mtlDevice: MTLDevice
+  #if os(macOS)
   internal let gpuEntry: io_registry_entry_t
+  #else
+  internal let deviceKitDevice: Device
+  #endif
   
   // Cached values to decrease retrieval overhead.
   private let _name: String
@@ -101,16 +119,31 @@ public class AppleGPUDevice {
   private let _memory: Int
   private let _family: MTLGPUFamily
   
+  /// For compatibility with the C API, store an explicit C string.
+  internal let _cName: UnsafeMutablePointer<CChar>
+  
   /// Initialize the device object.
   public init() throws {
+    #if os(macOS)
     let devices = MTLCopyAllDevices()
     guard let appleDevice = devices.first(where: {
-      $0.supportsFamily(.apple7 )
+      $0.supportsFamily(.apple2)
     }) else {
       throw AppleGPUError(description: "This device does is not an Apple GPU.")
     }
     self.mtlDevice = appleDevice
+    #else
+    self.mtlDevice = MTLCreateSystemDefaultDevice()!
+    #endif
     
+    // Cache the name.
+    do {
+      self._name = mtlDevice.name
+      self._cName = .allocate(capacity: _name.count)
+      strcpy(_cName, _name)
+    }
+    
+    #if os(macOS)
     // IOKit
     // Create a matching dictionary with "AGXAccelerator" class name
     let matchingDict = IOServiceMatching("AGXAccelerator")
@@ -131,14 +164,68 @@ public class AppleGPUDevice {
 
     // Release the iterator
     IOObjectRelease(iterator)
+    #else
+    self.deviceKitDevice = Device.current
+    #endif
     
-    // Cache the name.
-    do {
-      self._name = mtlDevice.name
+    // Tier for calculating clock frequencies and other statistics.
+    enum Tier {
+      case phone
+      case base
+      case pro
+      case max
+      case ultra
+      case unknown
+    }
+    
+    // First, find the tier of the Metal GPU.
+    var tier: Tier
+    var name = mtlDevice.name
+    if name.starts(with: "Apple A") {
+      name.removeFirst("Apple A".count)
+      
+      if name.last!.isWholeNumber == true {
+        // A12, etc.
+        tier = .phone
+      } else {
+        // A12X, A12Z, etc.
+        tier = .base
+      }
+    } else {
+      name.removeFirst("Apple M".count)
+      
+      if name.allSatisfy(\.isWholeNumber) {
+        tier = .base
+      } else if name.contains("Pro") {
+        tier = .pro
+      } else if name.contains("Max") {
+        tier = .max
+      } else if name.contains("Ultra") {
+        tier = .ultra
+      } else {
+        tier = .unknown
+      }
+    }
+    
+    // Second, find the generation.
+    var generationString = ""
+    for character in name {
+      if character.isWholeNumber {
+        generationString.append(character)
+      } else {
+        break
+      }
+    }
+    guard let generation = Int(generationString) else {
+      throw AppleGPUError(description: """
+        Could not transform string '\(generationString)' extracted from \
+        '\(name)' into a number.
+        """)
     }
     
     // Cache the core count.
     do {
+      #if os(macOS)
       // Get the "gpu-core-count" property from gpuEntry
       let key = "gpu-core-count"
       let options: IOOptionBits = 0 // No options needed
@@ -175,66 +262,92 @@ public class AppleGPUDevice {
       }
       
       self._coreCount = Int(value)
-    }
-    
-    // Tier for calculating clock frequencies.
-    enum Tier {
-      case base
-      case pro
-      case max
-      case ultra
-      case unknown
-    }
-    
-    // First, find the tier of the Metal GPU.
-    var tier: Tier
-    var name = mtlDevice.name
-    name.removeFirst("Apple M".count)
-    
-    if name.allSatisfy(\.isWholeNumber) {
-      tier = .base
-    } else if name.contains("Pro") {
-      tier = .pro
-    } else if name.contains("Max") {
-      tier = .max
-    } else if name.contains("Ultra") {
-      tier = .ultra
-    } else {
-      tier = .unknown
-    }
-    
-    // Second, find the generation.
-    var generationString = ""
-    for character in name {
-      if character.isWholeNumber {
-        generationString.append(character)
+      #else
+      if name.starts(with: "Apple A") {
+        switch generation {
+        case 8:
+          self._coreCount = 4
+        case 9:
+          fallthrough
+        case 10:
+          switch tier {
+          case .phone: _coreCount = 6
+          case .base: _coreCount = 12
+          default: throw AppleGPUError(description: """
+            Unrecognized GPU: \(name)
+            """)
+          }
+        case 11:
+          self._coreCount = 3
+        case 12:
+          switch tier {
+          case .phone: _coreCount = 4
+          case .base: _coreCount = name.contains("Z") ? 8 : 7
+          default: throw AppleGPUError(description: """
+            Unrecognized GPU: \(name)
+            """)
+          }
+        case 13:
+          fallthrough
+        case 14:
+          self._coreCount = 4
+        case 15:
+          // Need DeviceKit to distinguish iPhone 13 from 13 Pro
+          switch deviceKitDevice {
+          case .iPhone13Mini:
+            fallthrough
+          case .iPhone13:
+            fallthrough
+          case .iPhoneSE3:
+            self._coreCount = 4
+          default:
+            self._coreCount = 5
+          }
+        case 16:
+          fallthrough
+        default:
+          self._coreCount = 5
+        }
       } else {
-        break
+        switch generation {
+        case 1:
+          self._coreCount = 8
+        case 2:
+          fallthrough
+        default:
+          self._coreCount = 10
+        }
       }
-    }
-    guard let generation = Int(generationString) else {
-      throw AppleGPUError(description: """
-        Could not transform string '\(generationString)' extracted from \
-        '\(name)' into a number.
-        """)
+      #endif
     }
     
     // Cache the clock frequency.
     do {
-      switch generation {
-      case 1:
-        switch tier {
-        case .base: _clockFrequency = 1.278e9
-        case .pro, .max, .ultra: _clockFrequency = 1.296e9
-        case .unknown: _clockFrequency = 1.296e9
-        }
-      case 2:
-        fallthrough
-      default:
-        switch tier {
-        case .base: _clockFrequency = 1.398e9
-        case .pro, .max: _clockFrequency = 1.398e9
-        default: _clockFrequency = 1.398e9
+      if name.contains("Apple A") {
+        // TODO: Support iOS.
+        _clockFrequency = 0
+      } else {
+        switch generation {
+        case 1:
+          switch tier {
+          case .phone: throw AppleGPUError(description: """
+            Unrecognized GPU: \(name)
+            """)
+          case .base: _clockFrequency = 1.278e9
+          case .pro, .max, .ultra: _clockFrequency = 1.296e9
+          case .unknown: _clockFrequency = 1.296e9
+          }
+        case 2:
+          fallthrough
+        default:
+          switch tier {
+          case .phone: throw AppleGPUError(description: """
+            Unrecognized GPU: \(name)
+            """)
+          case .base: _clockFrequency = 1.398e9
+          case .pro, .max: _clockFrequency = 1.398e9
+          default: _clockFrequency = 1.398e9
+          }
         }
       }
     }
@@ -247,24 +360,35 @@ public class AppleGPUDevice {
         return clock * Double(bits / 8)
       }
       
-      switch generation {
-      case 1:
-        switch tier {
-        case .base: _bandwidth = dataRate(clock: 4.266e9, bits: 128)
-        case .pro: _bandwidth = dataRate(clock: 6.400e9, bits: 256)
-        case .max: _bandwidth = dataRate(clock: 6.400e9, bits: 512)
-        case .ultra: _bandwidth = dataRate(clock: 6.400e9, bits: 1024)
-        case .unknown: _bandwidth = dataRate(clock: 6.400e9, bits: 1024)
-        }
-      case 2:
-        fallthrough
-      default:
-        switch tier {
-        case .base: _bandwidth = dataRate(clock: 6.400e9, bits: 128)
-        case .pro: _bandwidth = dataRate(clock: 6.400e9, bits: 256)
-        case .max: _bandwidth = dataRate(clock: 6.400e9, bits: 512)
-        case .ultra: _bandwidth = dataRate(clock: 6.400e9, bits: 1024)
-        case .unknown: _bandwidth = dataRate(clock: 6.400e9, bits: 1024)
+      if name.contains("Apple A") {
+        // TODO: Support iOS.
+        _bandwidth = 0
+      } else {
+        switch generation {
+        case 1:
+          switch tier {
+          case .phone: throw AppleGPUError(description: """
+            Unrecognized GPU: \(name)
+            """)
+          case .base: _bandwidth = dataRate(clock: 4.266e9, bits: 128)
+          case .pro: _bandwidth = dataRate(clock: 6.400e9, bits: 256)
+          case .max: _bandwidth = dataRate(clock: 6.400e9, bits: 512)
+          case .ultra: _bandwidth = dataRate(clock: 6.400e9, bits: 1024)
+          case .unknown: _bandwidth = dataRate(clock: 6.400e9, bits: 1024)
+          }
+        case 2:
+          fallthrough
+        default:
+          switch tier {
+          case .phone: throw AppleGPUError(description: """
+            Unrecognized GPU: \(name)
+            """)
+          case .base: _bandwidth = dataRate(clock: 6.400e9, bits: 128)
+          case .pro: _bandwidth = dataRate(clock: 6.400e9, bits: 256)
+          case .max: _bandwidth = dataRate(clock: 6.400e9, bits: 512)
+          case .ultra: _bandwidth = dataRate(clock: 6.400e9, bits: 1024)
+          case .unknown: _bandwidth = dataRate(clock: 6.400e9, bits: 1024)
+          }
         }
       }
     }
@@ -279,24 +403,35 @@ public class AppleGPUDevice {
     do {
       let megabyte = 1024 * 1024
       
-      switch generation {
-      case 1:
-        switch tier {
-        case .base: _systemLevelCache = 8 * megabyte
-        case .pro: _systemLevelCache = 24 * megabyte
-        case .max: _systemLevelCache = 48 * megabyte
-        case .ultra: _systemLevelCache = 96 * megabyte
-        case .unknown: _systemLevelCache = 96 * megabyte
-        }
-      case 2:
-        fallthrough
-      default:
-        switch tier {
-        case .base: _systemLevelCache = 8 * megabyte
-        case .pro: _systemLevelCache = 24 * megabyte
-        case .max: _systemLevelCache = 48 * megabyte
-        case .ultra: _systemLevelCache = 96 * megabyte
-        case .unknown: _systemLevelCache = 96 * megabyte
+      if name.contains("Apple A") {
+        // TODO: Support iOS.
+        _systemLevelCache = 0
+      } else {
+        switch generation {
+        case 1:
+          switch tier {
+          case .phone: throw AppleGPUError(description: """
+            Unrecognized GPU: \(name)
+            """)
+          case .base: _systemLevelCache = 8 * megabyte
+          case .pro: _systemLevelCache = 24 * megabyte
+          case .max: _systemLevelCache = 48 * megabyte
+          case .ultra: _systemLevelCache = 96 * megabyte
+          case .unknown: _systemLevelCache = 96 * megabyte
+          }
+        case 2:
+          fallthrough
+        default:
+          switch tier {
+          case .phone: throw AppleGPUError(description: """
+            Unrecognized GPU: \(name)
+            """)
+          case .base: _systemLevelCache = 8 * megabyte
+          case .pro: _systemLevelCache = 24 * megabyte
+          case .max: _systemLevelCache = 48 * megabyte
+          case .ultra: _systemLevelCache = 96 * megabyte
+          case .unknown: _systemLevelCache = 96 * megabyte
+          }
         }
       }
     }
@@ -316,7 +451,6 @@ public class AppleGPUDevice {
     
     // Cache the family.
     do {
-      // TODO: Recognize more than just Apple 7/8 when porting to iOS.
       var maxRecognized: MTLGPUFamily = .apple8
       while maxRecognized.rawValue >= 0 {
         if mtlDevice.supportsFamily(maxRecognized) {
@@ -327,6 +461,13 @@ public class AppleGPUDevice {
       }
       self._family = maxRecognized
     }
+  }
+  
+  deinit {
+    #if os(macOS)
+    IOObjectRelease(gpuEntry)
+    #endif
+    _cName.deallocate()
   }
 }
 
@@ -356,7 +497,8 @@ public extension AppleGPUDevice {
   
   /// Maximum theoretical number of floating-point operations per second.
   ///
-  /// This is a singular noun.
+  /// The number of FP32 operations performed through fused muliply-add each
+  /// second. This is a singular noun.
   var flops: Double {
     return _flops
   }
@@ -423,15 +565,15 @@ internal func AppleGPUError_description(
   // Get a Swift class reference to unmanagedError
   let error = unmanagedError.takeUnretainedValue()
   
-  // Return permanent backing buffer for the string
-  return error.description.withCString { $0 }
+  // Return C-accessible copy of string contents
+  return UnsafePointer(error._cDescripton)
 }
 
-/// Initialize the device object.
+/// Initialize the device object, returning any errors at +1 refcount.
 @_cdecl("AppleGPUDevice_init")
 @usableFromInline
 internal func AppleGPUDevice_init(
-  _ pointerError: UnsafeMutablePointer<UnsafeMutableRawPointer>
+  _ pointerError: UnsafeMutablePointer<UnsafeMutableRawPointer?>
 ) -> UnsafeMutableRawPointer? {
   var device: AppleGPUDevice
   
@@ -483,8 +625,8 @@ internal func AppleGPUDevice_name(
   // Get a Swift class object from unmanagedDevice
   let device = unmanagedDevice.takeUnretainedValue()
   
-  // Return permanent backing buffer for the string
-  return device.name.withCString { $0 }
+  // Return C-accessible copy of string contents
+  return UnsafePointer(device._cName)
 }
 
 /// Number of GPU cores.
@@ -551,34 +693,50 @@ internal func AppleGPUDevice_flops(
   return Double(device.flops)
 }
 
-//#if false
-//// Initialize the device object.
-//AppleGPUDevice *AppleGPUDevice_init(AppleGPUError **error);
-//
-//// Free the device object.
-//void AppleGPUDevice_free(AppleGPUDevice *device);
-//
-//// The full name of the GPU device.
-//const char *AppleGPUDevice_name(AppleGPUDevice *device);
-//
-//// Number of GPU cores.
-//int AppleGPUDevice_coreCount(AppleGPUDevice *device);
-//
-//// Clock speed in Hz.
-//double AppleGPUDevice_clockFrequency(AppleGPUDevice *device);
-//
-//// Maximum theoretical bandwidth to unified RAM, in bytes/second.
-//double AppleGPUDevice_bandwidth(AppleGPUDevice *device);
-//
-//// Maximum theoretical number of floating-point operations per second.
-//double AppleGPUDevice_flops(AppleGPUDevice *device);
-//
-//// Size of on-chip memory cache, in bytes.
-//int AppleGPUDevice_systemLevelCache(AppleGPUDevice *device);
-//
-//// Size of unified RAM, in bytes.
-//int AppleGPUDevice_memory(AppleGPUDevice *device);
-//
-//// Metal GPU family (as an integer).
-//int AppleGPUDevice_family(AppleGPUDevice *device);
-//#endif
+/// Size of on-chip memory cache, in bytes.
+@_cdecl("AppleGPUDevice_systemLevelCache")
+@usableFromInline
+internal func AppleGPUDevice_systemLevelCache(
+  _ pointerDevice: UnsafeMutableRawPointer
+) -> Int64 {
+  // Get an unmanaged reference from pointerDevice
+  let unmanagedDevice = Unmanaged<AppleGPUDevice>.fromOpaque(pointerDevice)
+
+  // Get a Swift class object from unmanagedDevice
+  let device = unmanagedDevice.takeUnretainedValue()
+  
+  // Return the system level cache.
+  return Int64(device.systemLevelCache)
+}
+
+/// Size of unified RAM, in bytes.
+@_cdecl("AppleGPUDevice_memory")
+@usableFromInline
+internal func AppleGPUDevice_memory(
+  _ pointerDevice: UnsafeMutableRawPointer
+) -> Int64 {
+  // Get an unmanaged reference from pointerDevice
+  let unmanagedDevice = Unmanaged<AppleGPUDevice>.fromOpaque(pointerDevice)
+
+  // Get a Swift class object from unmanagedDevice
+  let device = unmanagedDevice.takeUnretainedValue()
+  
+  // Return the system level cache.
+  return Int64(device.memory)
+}
+
+/// Metal GPU family (as an integer).
+@_cdecl("AppleGPUDevice_family")
+@usableFromInline
+internal func AppleGPUDevice_family(
+  _ pointerDevice: UnsafeMutableRawPointer
+) -> Int64 {
+  // Get an unmanaged reference from pointerDevice
+  let unmanagedDevice = Unmanaged<AppleGPUDevice>.fromOpaque(pointerDevice)
+
+  // Get a Swift class object from unmanagedDevice
+  let device = unmanagedDevice.takeUnretainedValue()
+  
+  // Return the system level cache.
+  return Int64(device.family.rawValue)
+}

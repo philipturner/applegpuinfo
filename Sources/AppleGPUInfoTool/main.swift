@@ -82,8 +82,8 @@ struct List: ParsableCommand {
       print("GPU memory: \(device.memory / gigabyte) GB")
       
       // Print the Metal GPU family
-      let delta = device.family.rawValue - MTLGPUFamily.apple7.rawValue
-      print("GPU family: Apple \(delta + 7)")
+      let delta = device.family.rawValue - MTLGPUFamily.apple2.rawValue
+      print("GPU family: Apple \(delta + 2)")
     } catch {
       // Handle any errors that may occur
       print("Error: \(error.localizedDescription)")

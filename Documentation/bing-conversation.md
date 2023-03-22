@@ -1135,7 +1135,7 @@ You also need to make sure that your Swift function uses types that are compatib
 
 **Assistant:**
 
-According to </a>[<sup>1</sup>](https://stackoverflow.com/questions/37470481/how-do-i-convert-my-swift-class-to-an-unsafepointer-like-the-bridge-in-objecti) and </a>[<"type in swift" h="ID=SERP,5025.1"><sup>2</sup>](https://stackoverflow.com/questions/33294620/how-to-cast-self-to-unsafemutablepointervoid-type-in-swift), you can convert a Swift class object to an unsafe reference by using Unmanaged<T> type. This type allows you to manage the memory of an instance manually without ARC interference.
+According to </a>[<sup>1</sup>](https://stackoverflow.com/questions/37470481/how-do-i-convert-my-swift-class-to-an-unsafepointer-like-the-bridge-in-objecti) and </a>[<sup>2</sup>](https://stackoverflow.com/questions/33294620/how-to-cast-self-to-unsafemutablepointervoid-type-in-swift), you can convert a Swift class object to an unsafe reference by using Unmanaged<T> type. This type allows you to manage the memory of an instance manually without ARC interference.
 
 
 To convert a Swift class object to an unsafe reference, you need to use Unmanaged.passRetained(<em>:) or Unmanaged.passUnretained(</em>:) method. The former increments the retain count of the object and returns an Unmanaged<T> instance that has a +1 retain count. The latter does not increment the retain count and returns an Unmanaged<T> instance that has a +0 retain count.
