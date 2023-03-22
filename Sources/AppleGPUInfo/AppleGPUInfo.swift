@@ -10,7 +10,7 @@ import DeviceKit
 
 /// An error returned by the AppleGPUInfo library.
 public class AppleGPUError: Error {
-  /// Retrieve the description for this error.
+  /// The description of the error.
   public var description: String
   
   /// Initialize the error object.
@@ -20,6 +20,9 @@ public class AppleGPUError: Error {
 /// A data structure for querying parameters of an Apple-designed GPU.
 public class AppleGPUDevice {
   /// Initialize the device object.
+  ///
+  /// Creating an `AppleGPUDevice` is an expensive operation. If possible, only
+  /// call this initializer once.
   public init() throws
 }
 
@@ -82,7 +85,7 @@ fileprivate func handleIORegistryError(
 
 /// An error returned by the AppleGPUInfo library.
 public class AppleGPUError: Error {
-  /// Retrieve the description for this error.
+  /// The description of the error.
   public let description: String
   
   /// For compatibility with the C API, store an explicit C string.
@@ -100,8 +103,9 @@ public class AppleGPUError: Error {
   }
 }
 
-/// A data structure for querying parameters of an Apple-designed GPU.
+/// Data structure for querying parameters of an Apple-designed GPU.
 public class AppleGPUDevice {
+  // Objects for querying parameters.
   internal let mtlDevice: MTLDevice
   #if os(macOS)
   internal let gpuEntry: io_registry_entry_t
@@ -123,6 +127,9 @@ public class AppleGPUDevice {
   internal let _cName: UnsafeMutablePointer<CChar>
   
   /// Initialize the device object.
+  ///
+  /// Creating an `AppleGPUDevice` is an expensive operation. If possible, only
+  /// call this initializer once.
   public init() throws {
     #if os(macOS)
     let devices = MTLCopyAllDevices()
@@ -520,8 +527,6 @@ public extension AppleGPUDevice {
 }
 
 // C API - exported symbols loadable from the dylib.
-// TODO: Make tests for this, finish bindings the AppleGPUDevice object.
-// TODO: Make a test script that loads the dylib object.
 
 /// Initialize the error object.
 @_cdecl("AppleGPUError_init")
@@ -570,6 +575,9 @@ internal func AppleGPUError_description(
 }
 
 /// Initialize the device object, returning any errors at +1 refcount.
+///
+/// Creating an `AppleGPUDevice` is an expensive operation. If possible, only
+/// call this initializer once.
 @_cdecl("AppleGPUDevice_init")
 @usableFromInline
 internal func AppleGPUDevice_init(
@@ -646,6 +654,9 @@ internal func AppleGPUDevice_coreCount(
 }
 
 /// Clock speed in Hz.
+///
+/// Results should be cross-referenced with [philipturner/metal-benchmarks
+/// ](https://github.com/philipturner/metal-benchmarks).
 @_cdecl("AppleGPUDevice_clockFrequency")
 @usableFromInline
 internal func AppleGPUDevice_clockFrequency(
@@ -678,6 +689,9 @@ internal func AppleGPUDevice_bandwidth(
 }
 
 /// Maximum theoretical number of floating-point operations per second.
+///
+/// The number of FP32 operations performed through fused muliply-add each
+/// second. This is a singular noun.
 @_cdecl("AppleGPUDevice_flops")
 @usableFromInline
 internal func AppleGPUDevice_flops(
