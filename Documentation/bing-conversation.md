@@ -651,7 +651,9 @@ To https://github.com/philipturner/applegpuinfo
 
 **Human:**
 
- I wrote some code in C++ that queries to IORegistry. How do I rewrite this code in Swift?: ```
+ I wrote some code in C++ that queries to IORegistry. How do I rewrite this code in Swift?: 
+ 
+ ```cpp
 
 #include <IOKit/IOKitLib.h>
 #include <CoreFoundation/CoreFoundation.h>
@@ -704,6 +706,7 @@ int64_t get_gpu_core_count(io_registry_entry_t gpu_entry) {
   // Release acquired objects.
   CFRelease(gpu_core_count);
   return
+```
 
 ***
 
@@ -752,7 +755,7 @@ I’m not an expert in Swift or IORegistry, but based on the information I found
 
 Here is a possible example of such a function:
 
-```
+```swift
 import IOKit
 import Foundation
 
@@ -795,7 +798,9 @@ func getGPUEntry() -> String? {
 
 **Human:**
 
- That didn't work exactly. Here's a skeleton of what I'm thinking of: "// The caller must release the entry.
+ That didn't work exactly. Here's a skeleton of what I'm thinking of: 
+ ```cpp
+ // The caller must release the entry.
 inline io_registry_entry_t get_gpu_entry() {
   // Class hierarchy: IOGPU -> AGXAccelerator -> AGXFamilyAccelerator
   // We could go with IOGPU, but we want to restrict this to Apple silicon.
@@ -813,7 +818,8 @@ inline io_registry_entry_t get_gpu_entry() {
   // Release acquired objects.
   IOObjectRelease(entry_iterator);
   return gpu_entry;
-}"
+}
+```
 
 ***
 
@@ -835,7 +841,7 @@ I see. It looks like you are trying to use C++ code to get the GPU entry from IO
 
 According to </a>[<sup>1</sup>](https://developer.apple.com/documentation/iokit/1514687-ioservicematching) and </a>[<sup>2</sup>](https://developer.apple.com/documentation/iokit/1514494-ioservicegetmatchingservices), you can use IOServiceMatching and IOServiceGetMatchingServices functions in Swift by importing IOKit framework and passing a C-string name of the class you want to match. For example, if you want to match “AGXAccelerator” class, you can do something like this:
 
-```
+```swift
 import IOKit
 
 // Create a matching dictionary with "AGXAccelerator" class name
@@ -880,7 +886,7 @@ IOObjectRelease(iterator)
 
 According to </a>[<sup>1</sup>](https://developer.apple.com/documentation/iokit/1514537-ioregistryentrysearchcfproperty), you can use IORegistryEntrySearchCFProperty function in Swift by importing IOKit framework and passing a io_registry_entry_t, a plane name, a key name, an allocator and some options. For example, if you want to fetch the “gpu-core-count” property from the gpuEntry object in the kIOServicePlane, you can do something like this:
 
-```
+```swift
 import IOKit
 
 // Get the "gpu-core-count" property from gpuEntry
@@ -924,7 +930,7 @@ if result == false {
 **Human:**
 
  I need to create a C interface for my library “AppleGPUInfo”, but it’s written in Swift. Can you help me with making the C bindings? Here is the Swift interface file:
-```
+```swift
 /// An error returned by the AppleGPUInfo library.
 public struct AppleGPUError: Error {
   var description: String
@@ -988,7 +994,7 @@ Here is a possible example of how to create a C interface for your AppleGPUInfo 
 
 
 
-```
+```c
 // An error returned by the AppleGPUInfo library.
 typedef struct AppleGPUError {
   const char *description;
@@ -1034,7 +1040,7 @@ int AppleGPUDevice_family(AppleGPUDevice *device);
 
 
 
-```
+```swift
 @_cdecl("AppleGUPUError_init")
 public func init() throws -> UnsafeMutablePointer<AppleGUPUError> {
   // ...
@@ -1057,7 +1063,7 @@ public func description(_ error: UnsafeMutablePointer<AppleGUPUError>) -> Unsafe
 
 
 
-```
+```c
 #include "AppleGUPUInfo.h"
 
 int main() {
@@ -1101,7 +1107,7 @@ According to </a>[<sup>1</sup>](https://dev.to/gerwert/calling-swift-from-go-5db
 
 To write a @_cdecl function, you need to add the attribute before the function declaration and specify a C-compatible name for the function. For example:
 
-```
+```swift
 @_cdecl("AppleGPUDevice_init")
 public func init() throws -> UnsafeMutablePointer<AppleGPUDevice> {
   // ...
@@ -1140,7 +1146,7 @@ To get an UnsafeMutablePointer<T> from an Unmanaged<T> instance, you need to use
 
 For example:
 
-```
+```swift
 // Create a Swift class object
 let device = AppleGPUDevice()
 
@@ -1157,7 +1163,7 @@ To convert back from an unsafe reference to a Swift class object, you need to us
 
 For example:
 
-```
+```swift
 // Get an unmanaged reference from pointerDevice
 let unmanagedDevice = Unmanaged<AppleGPUDevice>.fromOpaque(pointerDevice)
 
@@ -1171,7 +1177,7 @@ You also need to balance the retain counts of your objects by using takeRetained
 
 For example:
 
-```
+```swift
 // Release the object referenced by pointerDevice
 unamangedDevice.release()
 ```

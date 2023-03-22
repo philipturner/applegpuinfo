@@ -4,13 +4,13 @@ This is a mini-framework for querying parameters of an Apple-designed GPU. It al
 
 Listed parameters:
 - Name ✅
-- Cores ✅
+- Core count ✅
 - Clock frequency ✅
 - Bandwidth ✅
 - FLOPS ✅
 - System-level cache ✅
 - Memory ✅
-- Family: ✅
+- Family ✅
 
 TODO: Deploy to Homebrew and Swift Package Registry, port to iOS, release v1.0.1.
 
