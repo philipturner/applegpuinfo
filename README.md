@@ -46,9 +46,9 @@ dependencies: [
 // Inside source code
 import AppleGPUInfo
 
-let gpuDevice = try GPUInfoDevice()
-print(gpuDevice.flops)
-print(gpuDevice.bandwidth)
+let device = try GPUInfoDevice()
+print(device.flops)
+print(device.bandwidth)
 ```
 
 ## Methodology
