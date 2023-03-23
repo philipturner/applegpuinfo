@@ -28,7 +28,7 @@ GPU core count: 32
 GPU clock frequency: 1.296 GHz
 GPU bandwidth: 409.6 GB/s
 GPU FLOPS: 10.617 TFLOPS
-GPU IPS: 5.318 TFLOPS
+GPU IPS: 5.308 TIPS
 GPU system level cache: 48 MB
 GPU memory: 32 GB
 GPU family: Apple 7
@@ -46,7 +46,7 @@ dependencies: [
 // Inside source code
 import AppleGPUInfo
 
-let gpuDevice = GPUInfoDevice()
+let gpuDevice = try GPUInfoDevice()
 print(gpuDevice.flops)
 print(gpuDevice.bandwidth)
 ```
