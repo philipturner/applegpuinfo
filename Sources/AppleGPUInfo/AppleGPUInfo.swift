@@ -38,8 +38,8 @@ public extension GPUInfoDevice {
   
   /// The clock speed in Hz.
   ///
-  /// Results should be cross-referenced with [philipturner/metal-benchmarks]
-  /// (https://github.com/philipturner/metal-benchmarks).
+  /// Results should be cross-referenced with
+  /// [philipturner/metal-benchmarks](https://github.com/philipturner/metal-benchmarks).
   var clockFrequency: Double {
     return _clockFrequency
   }
