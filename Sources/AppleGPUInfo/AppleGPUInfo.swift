@@ -44,7 +44,8 @@ public extension GPUInfoDevice {
     return _clockFrequency
   }
   
-  /// The maximum theoretical bandwidth to the unified RAM, in bytes/second.
+  /// The maximum theoretical bandwidth to the unified random-access memory, in
+  /// bytes/second.
   var bandwidth: Double {
     return _bandwidth
   }
@@ -60,21 +61,22 @@ public extension GPUInfoDevice {
   /// The maximum theoretical number of shader instructions per second.
   ///
   /// The number of `Int32` add operations performed each second. See the
-  /// [Apple GPU ISA](https://github.com/dougallj/applegpu) for instances
-  /// where multiple operations can be fused into one shader instruction.
+  /// [Apple GPU ISA](https://github.com/dougallj/applegpu) for situations
+  /// where multiple operations are fused into one shader instruction.
   var ips: Double {
     return _ips
   }
   
   /// The size of the on-chip memory cache, in bytes.
   ///
-  /// On iOS, this property will sometimes return zero. Provide fallbacks for
-  /// optimizations that depend on cache size.
+  /// This property sometimes returns zero. If your application targets iPads
+  /// with the A9X or A10X chip, provide fallbacks for optimizations that
+  /// require a nonzero cache size.
   var systemLevelCache: Int {
     return _systemLevelCache
   }
   
-  /// The size of the unified RAM, in bytes.
+  /// The size of the unified random-access memory, in bytes.
   var memory: Int {
     return _memory
   }
