@@ -38,8 +38,8 @@ public extension GPUInfoDevice {
   
   /// The clock speed in Hz.
   ///
-  /// Results should be cross-referenced with [philipturner/metal-benchmarks
-  /// ](https://github.com/philipturner/metal-benchmarks).
+  /// Results should be cross-referenced with [philipturner/metal-benchmarks]
+  /// (https://github.com/philipturner/metal-benchmarks).
   var clockFrequency: Double {
     return _clockFrequency
   }
@@ -85,7 +85,7 @@ public extension GPUInfoDevice {
   }
 }
 
-/// Object for querying parameters of an Apple-designed GPU.
+/// An object for querying parameters of an Apple-designed GPU.
 public class GPUInfoDevice {
   // Objects for querying parameters.
   internal let mtlDevice: MTLDevice
@@ -111,8 +111,8 @@ public class GPUInfoDevice {
   
   /// Initialize the device object.
   ///
-  /// Creating an `GPUInfoDevice` is an expensive operation. If possible, only
-  /// call this initializer once.
+  /// Creating a `GPUInfoDevice` is a costly operation. If possible, create one
+  /// object and use it multiple times.
   public init() throws {
     #if os(macOS)
     let devices = MTLCopyAllDevices()
