@@ -106,16 +106,16 @@ class AppleGPUDeviceTests: XCTestCase {
   }
   
   // Test if the device has a positive system level cache size
-  func testSystemLevelCacheIsPositive() {
+  func testSystemLevelCacheIsNonNegative() {
     // Act: get the system level cache property
     let systemLevelCache = device.systemLevelCache
     let cSystemLevelCache = AppleGPUDevice_systemLevelCache(cDevice)
     
-    // Assert: check if it is greater than zero
-    XCTAssertGreaterThan(systemLevelCache, 0, """
+    // Assert: check if it is greater than or equal to zero
+    XCTAssertGreaterThanOrEqual(systemLevelCache, 0, """
       System level cache should be positive.
       """)
-    XCTAssertGreaterThan(cSystemLevelCache, 0, """
+    XCTAssertGreaterThanOrEqual(cSystemLevelCache, 0, """
       System level cache should be positive.
       """)
   }

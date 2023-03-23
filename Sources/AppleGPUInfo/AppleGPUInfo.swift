@@ -233,6 +233,9 @@ public class AppleGPUDevice {
         """)
     }
     
+    // Reset the `name` variable.
+    name = mtlDevice.name
+    
     // Cache the core count.
     do {
       #if os(macOS)
@@ -441,7 +444,23 @@ public class AppleGPUDevice {
     
     // Cache the FLOPS.
     do {
-      let operationsPerClock = self._coreCount * 128 * 2
+      // Number of FP32 ALUs per GPU core.
+      var alusPerCore: Int
+      
+      if name.contains("Apple A") {
+        if generation >= 15 {
+          alusPerCore = 128
+        } else if generation >= 11 {
+          alusPerCore = 64
+        } else {
+          alusPerCore = 32
+        }
+      } else {
+        // M-series chips.
+        alusPerCore = 128
+      }
+      
+      let operationsPerClock = self._coreCount * alusPerCore * 2
       self._flops = Double(operationsPerClock) * _clockFrequency
     }
     
