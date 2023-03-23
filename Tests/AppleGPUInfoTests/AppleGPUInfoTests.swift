@@ -3,7 +3,7 @@ import XCTest
 
 final class AppleGPUInfoTests: XCTestCase {
   // Generated using GPT-4. Methodology:
-  // - Feed the interface blurb from "AppleGPUInfo.swift" into the chat.
+  // - Feed the interface blurb from "GPUInfo.swift" into the chat.
   // - Ask for a test case, copy and refine what it tests.
   // - If it missed anything, ask for that as well.
   func testDeviceParameters() throws {
@@ -16,27 +16,27 @@ final class AppleGPUInfoTests: XCTestCase {
 import XCTest
 @testable import AppleGPUInfo
 
-class AppleGPUDeviceTests: XCTestCase {
+class GPUInfoDeviceTests: XCTestCase {
   // A test device instance
-  var device: AppleGPUDevice!
+  var device: GPUInfoDevice!
   var cDevice: UnsafeMutableRawPointer!
   
   // Set up before each test method
   override func setUp() {
     super.setUp()
     // Arrange: create a device instance
-    device = try? AppleGPUDevice()
+    device = try? GPUInfoDevice()
     
     var error: UnsafeMutableRawPointer?
-    cDevice = AppleGPUDevice_init(&error)
-    XCTAssertNil(error, String(cString: AppleGPUError_description(error!)))
+    cDevice = GPUInfoDevice_init(&error)
+    XCTAssertNil(error, String(cString: GPUInfoError_description(error!)))
   }
   
   // Tear down after each test method
   override func tearDown() {
     // Release the device instance
     device = nil
-    AppleGPUDevice_deinit(cDevice)
+    GPUInfoDevice_deinit(cDevice)
     super.tearDown()
   }
   
@@ -44,7 +44,7 @@ class AppleGPUDeviceTests: XCTestCase {
   func testNameIsValid() {
     // Act: get the name property
     let name = device.name
-    let cName = AppleGPUDevice_name(cDevice)
+    let cName = GPUInfoDevice_name(cDevice)
     
     // Assert: check that the name contains "Apple "
     XCTAssertEqual(name.prefix(6), "Apple ")
@@ -55,7 +55,7 @@ class AppleGPUDeviceTests: XCTestCase {
   func testCoreCountIsPositive() {
     // Act: get the core count property
     let coreCount = device.coreCount
-    let cCoreCount = AppleGPUDevice_coreCount(cDevice)
+    let cCoreCount = GPUInfoDevice_coreCount(cDevice)
     
     // Assert: check if it is greater than zero
     XCTAssertGreaterThan(coreCount, 0, "Core count should be positive.")
@@ -66,7 +66,7 @@ class AppleGPUDeviceTests: XCTestCase {
   func testClockFrequencyIsValid() {
     // Act: get the clock frequency property
     let clockFrequency = device.clockFrequency
-    let cClockFrequency = AppleGPUDevice_clockFrequency(cDevice)
+    let cClockFrequency = GPUInfoDevice_clockFrequency(cDevice)
     
     // Assert: check if it is between 0 and 10 GHz
     XCTAssertGreaterThanOrEqual(clockFrequency, 0, """
@@ -87,7 +87,7 @@ class AppleGPUDeviceTests: XCTestCase {
   func testBandwidthIsPositive() {
     // Act: get the bandwidth property
     let bandwidth = device.bandwidth
-    let cBandwidth = AppleGPUDevice_bandwidth(cDevice)
+    let cBandwidth = GPUInfoDevice_bandwidth(cDevice)
     
     // Assert: check if it is greater than zero
     XCTAssertGreaterThan(bandwidth, 0, "Bandwidth should be positive.")
@@ -98,7 +98,7 @@ class AppleGPUDeviceTests: XCTestCase {
   func testFLOPSIsPositive() {
     // Act: get the flops property
     let flops = device.flops
-    let cFlops = AppleGPUDevice_flops(cDevice)
+    let cFlops = GPUInfoDevice_flops(cDevice)
     
     // Assert: check if it is greater than zero
     XCTAssertGreaterThan(flops, 0, "Flops should be positive.")
@@ -109,7 +109,7 @@ class AppleGPUDeviceTests: XCTestCase {
   func testIPSIsPositive() {
     // Act: get the instructions per second property
     let ips = device.ips
-    let cIPS = AppleGPUDevice_ips(cDevice)
+    let cIPS = GPUInfoDevice_ips(cDevice)
     
     // Assert: check if it is greater than zero
     XCTAssertGreaterThan(ips, 0, "IPS should be positive.")
@@ -120,7 +120,7 @@ class AppleGPUDeviceTests: XCTestCase {
   func testSystemLevelCacheIsNonNegative() {
     // Act: get the system level cache property
     let systemLevelCache = device.systemLevelCache
-    let cSystemLevelCache = AppleGPUDevice_systemLevelCache(cDevice)
+    let cSystemLevelCache = GPUInfoDevice_systemLevelCache(cDevice)
     
     // Assert: check if it is greater than or equal to zero
     XCTAssertGreaterThanOrEqual(systemLevelCache, 0, """
@@ -135,7 +135,7 @@ class AppleGPUDeviceTests: XCTestCase {
   func testMemoryIsPositive() {
     // Act: get the memory property
     let memory = device.memory
-    let cMemory = AppleGPUDevice_memory(cDevice)
+    let cMemory = GPUInfoDevice_memory(cDevice)
     
     // Assert: check if it is greater than zero
     XCTAssertGreaterThan(memory, 0, "Memory should be positive.")
@@ -146,7 +146,7 @@ class AppleGPUDeviceTests: XCTestCase {
   func testFamilyIsValid() {
     // Act: get the family property
     let family = device.family
-    let cFamily = AppleGPUDevice_family(cDevice)
+    let cFamily = GPUInfoDevice_family(cDevice)
     
     // Assert: check if it is at least Apple 1
     let reference = MTLGPUFamily.apple1.rawValue
@@ -158,9 +158,9 @@ class AppleGPUDeviceTests: XCTestCase {
   // Test if the C interface to the error works correctly.
   func testErrorIsValid() {
     let message = "This error should be valid."
-    let error = AppleGPUError_init(message)
-    let description = AppleGPUError_description(error)
+    let error = GPUInfoError_init(message)
+    let description = GPUInfoError_description(error)
     XCTAssertEqual(String(cString: description), message)
-    AppleGPUError_deinit(error)
+    GPUInfoError_deinit(error)
   }
 }

@@ -8,9 +8,9 @@
 import AppleGPUInfo
 
 // Generated using GPT-4. Methodology:
-// - Feed the interface blurb from "AppleGPUInfo.swift" into the chat.
+// - Feed the interface blurb from "GPUInfo.swift" into the chat.
 // - Ask it to write a simple command-line tool that extracts all the parameters
-//   from the `AppleGPUDevice`, then outputs them using `print`. The tool should
+//   from the `GPUInfoDevice`, then outputs them using `print`. The tool should
 //   be written in Swift.
 
 // Auto-generated.
@@ -21,7 +21,7 @@ import ArgumentParser
 import Metal
 
 // Define a struct that conforms to ParsableCommand protocol
-struct GPUInfo: ParsableCommand {
+struct GPUInfoTool: ParsableCommand {
   // Define a static property that contains the command configuration
   static var configuration = CommandConfiguration(
     // The name of the command, defaults to the type name
@@ -59,8 +59,8 @@ struct List: ParsableCommand {
   // Define a method that runs when the subcommand is invoked
   func run() throws {
     do {
-      // Create an instance of AppleGPUDevice using its initializer
-      let device = try AppleGPUDevice()
+      // Create an instance of GPUInfoDevice using its initializer
+      let device = try GPUInfoDevice()
       
       // Print out some information about the device using its properties
 //      print("GPU device name: \(device.mtlDevice.name)")
@@ -99,4 +99,4 @@ struct List: ParsableCommand {
 }
 
 // Invoke the GPUInfo command
-GPUInfo.main()
+GPUInfoTool.main()

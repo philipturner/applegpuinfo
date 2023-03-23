@@ -8,12 +8,10 @@ Listed parameters:
 - Clock frequency ✅
 - Bandwidth ✅
 - FLOPS ✅
-- Instructions per second ✅
+- IPS (shader instructions per second) ✅
 - System-level cache ✅
 - Memory ✅
 - Family ✅
-
-TODO: Deploy to Homebrew and Swift Package Registry, release v1.0.1.
 
 ## Usage
 
@@ -30,6 +28,7 @@ GPU core count: 32
 GPU clock frequency: 1.296 GHz
 GPU bandwidth: 409.6 GB/s
 GPU FLOPS: 10.617 TFLOPS
+GPU IPS: 5.318 TFLOPS
 GPU system level cache: 48 MB
 GPU memory: 32 GB
 GPU family: Apple 7
@@ -47,7 +46,7 @@ dependencies: [
 // Inside source code
 import AppleGPUInfo
 
-let gpuDevice = AppleGPUDevice()
+let gpuDevice = GPUInfoDevice()
 print(gpuDevice.flops)
 print(gpuDevice.bandwidth)
 ```

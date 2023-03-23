@@ -9,7 +9,7 @@ import DeviceKit
 #if false
 
 /// An error returned by the AppleGPUInfo library.
-public class AppleGPUError: Error {
+public class GPUInfoError: Error {
   /// The description of the error.
   public var description: String
   
@@ -18,15 +18,15 @@ public class AppleGPUError: Error {
 }
 
 /// A data structure for querying parameters of an Apple-designed GPU.
-public class AppleGPUDevice {
+public class GPUInfoDevice {
   /// Initialize the device object.
   ///
-  /// Creating an `AppleGPUDevice` is an expensive operation. If possible, only
+  /// Creating a `GPUInfoDevice` is an expensive operation. If possible, only
   /// call this initializer once.
   public init() throws
 }
 
-public extension AppleGPUDevice {
+public extension GPUInfoDevice {
   /// The full name of the GPU device.
   var name: String
   
@@ -77,7 +77,7 @@ fileprivate func handleSysctlError(
   guard code == 0 else {
     var message = "Encountered sysctl error code \(code)"
     message += " at \(file):\(line)"
-    throw AppleGPUError(description: message)
+    throw GPUInfoError(description: message)
   }
 }
 
@@ -89,12 +89,12 @@ fileprivate func handleIORegistryError(
   guard code == 0 else {
     var message = "Encountered IORegistry error code \(code)"
     message += " at \(file):\(line)"
-    throw AppleGPUError(description: message)
+    throw GPUInfoError(description: message)
   }
 }
 
 /// An error returned by the AppleGPUInfo library.
-public class AppleGPUError: Error {
+public class GPUInfoError: Error {
   /// The description of the error.
   public let description: String
   
@@ -114,7 +114,7 @@ public class AppleGPUError: Error {
 }
 
 /// Data structure for querying parameters of an Apple-designed GPU.
-public class AppleGPUDevice {
+public class GPUInfoDevice {
   // Objects for querying parameters.
   internal let mtlDevice: MTLDevice
   #if os(macOS)
@@ -139,7 +139,7 @@ public class AppleGPUDevice {
   
   /// Initialize the device object.
   ///
-  /// Creating an `AppleGPUDevice` is an expensive operation. If possible, only
+  /// Creating an `GPUInfoDevice` is an expensive operation. If possible, only
   /// call this initializer once.
   public init() throws {
     #if os(macOS)
@@ -147,7 +147,7 @@ public class AppleGPUDevice {
     guard let appleDevice = devices.first(where: {
       $0.supportsFamily(.apple1)
     }) else {
-      throw AppleGPUError(description: "This device does is not an Apple GPU.")
+      throw GPUInfoError(description: "This device does is not an Apple GPU.")
     }
     self.mtlDevice = appleDevice
     #else
@@ -176,7 +176,7 @@ public class AppleGPUDevice {
 
     // Check if the entry is valid
     if gpuEntry == MACH_PORT_NULL {
-      throw AppleGPUError(
+      throw GPUInfoError(
         description: "Error getting GPU entry at \(#file):\(#line - 5)")
     }
 
@@ -235,7 +235,7 @@ public class AppleGPUDevice {
       }
     }
     guard let generation = Int(generationString) else {
-      throw AppleGPUError(description: """
+      throw GPUInfoError(description: """
         Could not transform string '\(generationString)' extracted from \
         '\(name)' into a number.
         """)
@@ -255,7 +255,7 @@ public class AppleGPUDevice {
 
       // Check if the property is valid
       if gpuCoreCount == nil {
-        throw AppleGPUError(description: """
+        throw GPUInfoError(description: """
           Error getting gpu-core-count property at \(#file):\(#line - 6)
           """)
       }
@@ -266,7 +266,7 @@ public class AppleGPUDevice {
       // Check if the number type is sInt64
       let type = CFNumberGetType(gpuCoreCountNumber)
       if type != .sInt64Type {
-        throw AppleGPUError(description: """
+        throw GPUInfoError(description: """
           Error: gpu-core-count is not sInt64 at \(#file):\(#line - 3)
           """)
       }
@@ -277,7 +277,7 @@ public class AppleGPUDevice {
 
       // Check for errors
       if result == false {
-        throw AppleGPUError(description: """
+        throw GPUInfoError(description: """
           Error getting value of gpu-core-count at \(#file):\(#line - 5)
           """)
       }
@@ -292,7 +292,7 @@ public class AppleGPUDevice {
           switch tier {
           case .phone: _coreCount = 6
           case .base: _coreCount = 12
-          default: throw AppleGPUError(description: """
+          default: throw GPUInfoError(description: """
             Unrecognized GPU: \(name)
             """)
           }
@@ -301,7 +301,7 @@ public class AppleGPUDevice {
           switch tier {
           case .phone: _coreCount = 4
           case .base: _coreCount = name.contains("Z") ? 8 : 7
-          default: throw AppleGPUError(description: """
+          default: throw GPUInfoError(description: """
             Unrecognized GPU: \(name)
             """)
           }
@@ -355,7 +355,7 @@ public class AppleGPUDevice {
         switch generation {
         case 1:
           switch tier {
-          case .phone: throw AppleGPUError(description: """
+          case .phone: throw GPUInfoError(description: """
             Unrecognized GPU: \(name)
             """)
           case .base: _clockFrequency = 1.278e9
@@ -366,7 +366,7 @@ public class AppleGPUDevice {
           fallthrough
         default:
           switch tier {
-          case .phone: throw AppleGPUError(description: """
+          case .phone: throw GPUInfoError(description: """
             Unrecognized GPU: \(name)
             """)
           case .base: _clockFrequency = 1.398e9
@@ -424,7 +424,7 @@ public class AppleGPUDevice {
         switch generation {
         case 1:
           switch tier {
-          case .phone: throw AppleGPUError(description: """
+          case .phone: throw GPUInfoError(description: """
             Unrecognized GPU: \(name)
             """)
           case .base: _bandwidth = dataRate(clock: 2.133e9, bits: 128)
@@ -437,7 +437,7 @@ public class AppleGPUDevice {
           fallthrough
         default:
           switch tier {
-          case .phone: throw AppleGPUError(description: """
+          case .phone: throw GPUInfoError(description: """
             Unrecognized GPU: \(name)
             """)
           case .base: _bandwidth = dataRate(clock: 3.200e9, bits: 128)
@@ -523,7 +523,7 @@ public class AppleGPUDevice {
         switch generation {
         case 1:
           switch tier {
-          case .phone: throw AppleGPUError(description: """
+          case .phone: throw GPUInfoError(description: """
             Unrecognized GPU: \(name)
             """)
           case .base: _systemLevelCache = 8 * megabyte
@@ -536,7 +536,7 @@ public class AppleGPUDevice {
           fallthrough
         default:
           switch tier {
-          case .phone: throw AppleGPUError(description: """
+          case .phone: throw GPUInfoError(description: """
             Unrecognized GPU: \(name)
             """)
           case .base: _systemLevelCache = 8 * megabyte
@@ -584,7 +584,7 @@ public class AppleGPUDevice {
   }
 }
 
-public extension AppleGPUDevice {
+public extension GPUInfoDevice {
   /// The full name of the GPU device.
   var name: String {
     return _name
@@ -647,13 +647,13 @@ public extension AppleGPUDevice {
 // C API - exported symbols loadable from the dylib.
 
 /// Initialize the error object.
-@_cdecl("AppleGPUError_init")
+@_cdecl("GPUInfoError_init")
 @usableFromInline
-internal func AppleGPUError_init(
+internal func GPUInfoError_init(
   _ description: UnsafePointer<CChar>
 ) -> UnsafeMutableRawPointer {
   // Create a Swift class object
-  let error = AppleGPUError(
+  let error = GPUInfoError(
     description: String(cString: description, encoding: .utf8)!)
 
   // Convert it to an unsafe reference with +1 retain count
@@ -664,26 +664,26 @@ internal func AppleGPUError_init(
 }
 
 /// Deinitialize the error object.
-@_cdecl("AppleGPUError_deinit")
+@_cdecl("GPUInfoError_deinit")
 @usableFromInline
-internal func AppleGPUError_deinit(
+internal func GPUInfoError_deinit(
   _ pointerError: UnsafeMutableRawPointer
 ) {
   // Get an unmanaged reference from pointerError
-  let unmanagedError = Unmanaged<AppleGPUError>.fromOpaque(pointerError)
+  let unmanagedError = Unmanaged<GPUInfoError>.fromOpaque(pointerError)
   
   // Release the object referenced by pointerError
   unmanagedError.release()
 }
 
 /// The description of the error.
-@_cdecl("AppleGPUError_description")
+@_cdecl("GPUInfoError_description")
 @usableFromInline
-internal func AppleGPUError_description(
+internal func GPUInfoError_description(
   _ pointerError: UnsafeMutableRawPointer
 ) -> UnsafePointer<CChar> {
   // Get an unmanaged reference from pointerError
-  let unmanagedError = Unmanaged<AppleGPUError>.fromOpaque(pointerError)
+  let unmanagedError = Unmanaged<GPUInfoError>.fromOpaque(pointerError)
   
   // Get a Swift class reference to unmanagedError
   let error = unmanagedError.takeUnretainedValue()
@@ -694,19 +694,19 @@ internal func AppleGPUError_description(
 
 /// Initialize the device object, returning any errors at +1 refcount.
 ///
-/// Creating an `AppleGPUDevice` is an expensive operation. If possible, only
+/// Creating an `GPUInfoDevice` is an expensive operation. If possible, only
 /// call this initializer once.
-@_cdecl("AppleGPUDevice_init")
+@_cdecl("GPUInfoDevice_init")
 @usableFromInline
-internal func AppleGPUDevice_init(
+internal func GPUInfoDevice_init(
   _ pointerError: UnsafeMutablePointer<UnsafeMutableRawPointer?>
 ) -> UnsafeMutableRawPointer? {
-  var device: AppleGPUDevice
+  var device: GPUInfoDevice
   
   do {
     // Create a Swift class object
-    device = try AppleGPUDevice()
-  } catch let error as AppleGPUError {
+    device = try GPUInfoDevice()
+  } catch let error as GPUInfoError {
     // Convert the error to an unsafe reference with +1 retain count
     let unmanagedError = Unmanaged.passRetained(error)
 
@@ -727,26 +727,26 @@ internal func AppleGPUDevice_init(
 }
 
 /// Deinitialize the device object.
-@_cdecl("AppleGPUDevice_deinit")
+@_cdecl("GPUInfoDevice_deinit")
 @usableFromInline
-internal func AppleGPUDevice_deinit(
+internal func GPUInfoDevice_deinit(
   _ pointerDevice: UnsafeMutableRawPointer
 ) {
   // Get an unmanaged reference from pointerDevice
-  let unmanagedDevice = Unmanaged<AppleGPUError>.fromOpaque(pointerDevice)
+  let unmanagedDevice = Unmanaged<GPUInfoError>.fromOpaque(pointerDevice)
   
   // Release the object referenced by pointerDevice
   unmanagedDevice.release()
 }
 
 /// The full name of the GPU device.
-@_cdecl("AppleGPUDevice_name")
+@_cdecl("GPUInfoDevice_name")
 @usableFromInline
-internal func AppleGPUDevice_name(
+internal func GPUInfoDevice_name(
   _ pointerDevice: UnsafeMutableRawPointer
 ) -> UnsafePointer<CChar> {
   // Get an unmanaged reference from pointerDevice
-  let unmanagedDevice = Unmanaged<AppleGPUDevice>.fromOpaque(pointerDevice)
+  let unmanagedDevice = Unmanaged<GPUInfoDevice>.fromOpaque(pointerDevice)
 
   // Get a Swift class object from unmanagedDevice
   let device = unmanagedDevice.takeUnretainedValue()
@@ -756,13 +756,13 @@ internal func AppleGPUDevice_name(
 }
 
 /// Number of GPU cores.
-@_cdecl("AppleGPUDevice_coreCount")
+@_cdecl("GPUInfoDevice_coreCount")
 @usableFromInline
-internal func AppleGPUDevice_coreCount(
+internal func GPUInfoDevice_coreCount(
   _ pointerDevice: UnsafeMutableRawPointer
 ) -> Int64 {
   // Get an unmanaged reference from pointerDevice
-  let unmanagedDevice = Unmanaged<AppleGPUDevice>.fromOpaque(pointerDevice)
+  let unmanagedDevice = Unmanaged<GPUInfoDevice>.fromOpaque(pointerDevice)
 
   // Get a Swift class object from unmanagedDevice
   let device = unmanagedDevice.takeUnretainedValue()
@@ -775,13 +775,13 @@ internal func AppleGPUDevice_coreCount(
 ///
 /// Results should be cross-referenced with [philipturner/metal-benchmarks
 /// ](https://github.com/philipturner/metal-benchmarks).
-@_cdecl("AppleGPUDevice_clockFrequency")
+@_cdecl("GPUInfoDevice_clockFrequency")
 @usableFromInline
-internal func AppleGPUDevice_clockFrequency(
+internal func GPUInfoDevice_clockFrequency(
   _ pointerDevice: UnsafeMutableRawPointer
 ) -> Double {
   // Get an unmanaged reference from pointerDevice
-  let unmanagedDevice = Unmanaged<AppleGPUDevice>.fromOpaque(pointerDevice)
+  let unmanagedDevice = Unmanaged<GPUInfoDevice>.fromOpaque(pointerDevice)
 
   // Get a Swift class object from unmanagedDevice
   let device = unmanagedDevice.takeUnretainedValue()
@@ -791,13 +791,13 @@ internal func AppleGPUDevice_clockFrequency(
 }
 
 /// Maximum theoretical bandwidth to unified RAM, in bytes/second.
-@_cdecl("AppleGPUDevice_bandwidth")
+@_cdecl("GPUInfoDevice_bandwidth")
 @usableFromInline
-internal func AppleGPUDevice_bandwidth(
+internal func GPUInfoDevice_bandwidth(
   _ pointerDevice: UnsafeMutableRawPointer
 ) -> Double {
   // Get an unmanaged reference from pointerDevice
-  let unmanagedDevice = Unmanaged<AppleGPUDevice>.fromOpaque(pointerDevice)
+  let unmanagedDevice = Unmanaged<GPUInfoDevice>.fromOpaque(pointerDevice)
 
   // Get a Swift class object from unmanagedDevice
   let device = unmanagedDevice.takeUnretainedValue()
@@ -810,13 +810,13 @@ internal func AppleGPUDevice_bandwidth(
 ///
 /// The number of FP32 operations performed through fused multiply-add each
 /// second. This is a singular noun.
-@_cdecl("AppleGPUDevice_flops")
+@_cdecl("GPUInfoDevice_flops")
 @usableFromInline
-internal func AppleGPUDevice_flops(
+internal func GPUInfoDevice_flops(
   _ pointerDevice: UnsafeMutableRawPointer
 ) -> Double {
   // Get an unmanaged reference from pointerDevice
-  let unmanagedDevice = Unmanaged<AppleGPUDevice>.fromOpaque(pointerDevice)
+  let unmanagedDevice = Unmanaged<GPUInfoDevice>.fromOpaque(pointerDevice)
 
   // Get a Swift class object from unmanagedDevice
   let device = unmanagedDevice.takeUnretainedValue()
@@ -830,13 +830,13 @@ internal func AppleGPUDevice_flops(
 /// The number of integer add operations performed each second. See the
 /// [Apple GPU ISA](https://github.com/dougallj/applegpu) for instances
 /// where multiple operations can be fused into one shader instruction.
-@_cdecl("AppleGPUDevice_ips")
+@_cdecl("GPUInfoDevice_ips")
 @usableFromInline
-internal func AppleGPUDevice_ips(
+internal func GPUInfoDevice_ips(
   _ pointerDevice: UnsafeMutableRawPointer
 ) -> Double {
   // Get an unmanaged reference from pointerDevice
-  let unmanagedDevice = Unmanaged<AppleGPUDevice>.fromOpaque(pointerDevice)
+  let unmanagedDevice = Unmanaged<GPUInfoDevice>.fromOpaque(pointerDevice)
 
   // Get a Swift class object from unmanagedDevice
   let device = unmanagedDevice.takeUnretainedValue()
@@ -849,13 +849,13 @@ internal func AppleGPUDevice_ips(
 ///
 /// Do not assume a system-level cache exists; this property sometimes returns
 /// zero. Provide fallbacks for optimizations that depend on SLC size.
-@_cdecl("AppleGPUDevice_systemLevelCache")
+@_cdecl("GPUInfoDevice_systemLevelCache")
 @usableFromInline
-internal func AppleGPUDevice_systemLevelCache(
+internal func GPUInfoDevice_systemLevelCache(
   _ pointerDevice: UnsafeMutableRawPointer
 ) -> Int64 {
   // Get an unmanaged reference from pointerDevice
-  let unmanagedDevice = Unmanaged<AppleGPUDevice>.fromOpaque(pointerDevice)
+  let unmanagedDevice = Unmanaged<GPUInfoDevice>.fromOpaque(pointerDevice)
 
   // Get a Swift class object from unmanagedDevice
   let device = unmanagedDevice.takeUnretainedValue()
@@ -865,13 +865,13 @@ internal func AppleGPUDevice_systemLevelCache(
 }
 
 /// Size of unified RAM, in bytes.
-@_cdecl("AppleGPUDevice_memory")
+@_cdecl("GPUInfoDevice_memory")
 @usableFromInline
-internal func AppleGPUDevice_memory(
+internal func GPUInfoDevice_memory(
   _ pointerDevice: UnsafeMutableRawPointer
 ) -> Int64 {
   // Get an unmanaged reference from pointerDevice
-  let unmanagedDevice = Unmanaged<AppleGPUDevice>.fromOpaque(pointerDevice)
+  let unmanagedDevice = Unmanaged<GPUInfoDevice>.fromOpaque(pointerDevice)
 
   // Get a Swift class object from unmanagedDevice
   let device = unmanagedDevice.takeUnretainedValue()
@@ -881,13 +881,13 @@ internal func AppleGPUDevice_memory(
 }
 
 /// Metal GPU family (as an integer).
-@_cdecl("AppleGPUDevice_family")
+@_cdecl("GPUInfoDevice_family")
 @usableFromInline
-internal func AppleGPUDevice_family(
+internal func GPUInfoDevice_family(
   _ pointerDevice: UnsafeMutableRawPointer
 ) -> Int64 {
   // Get an unmanaged reference from pointerDevice
-  let unmanagedDevice = Unmanaged<AppleGPUDevice>.fromOpaque(pointerDevice)
+  let unmanagedDevice = Unmanaged<GPUInfoDevice>.fromOpaque(pointerDevice)
 
   // Get a Swift class object from unmanagedDevice
   let device = unmanagedDevice.takeUnretainedValue()
