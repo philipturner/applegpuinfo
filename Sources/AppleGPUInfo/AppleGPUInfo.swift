@@ -145,7 +145,7 @@ public class AppleGPUDevice {
     #if os(macOS)
     let devices = MTLCopyAllDevices()
     guard let appleDevice = devices.first(where: {
-      $0.supportsFamily(.apple2)
+      $0.supportsFamily(.apple1)
     }) else {
       throw AppleGPUError(description: "This device does is not an Apple GPU.")
     }

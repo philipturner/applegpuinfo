@@ -148,8 +148,8 @@ class AppleGPUDeviceTests: XCTestCase {
     let family = device.family
     let cFamily = AppleGPUDevice_family(cDevice)
     
-    // Assert: check if it is at least Apple 2
-    let reference = MTLGPUFamily.apple2.rawValue
+    // Assert: check if it is at least Apple 1
+    let reference = MTLGPUFamily.apple1.rawValue
     XCTAssertGreaterThanOrEqual(family.rawValue, reference)
     XCTAssertGreaterThanOrEqual(Int(cFamily), reference)
     
