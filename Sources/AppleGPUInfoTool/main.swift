@@ -79,7 +79,13 @@ struct List: ParsableCommand {
       let gigabyte = 1024 * 1024 * 1024
       let slc = device.systemLevelCache / megabyte
       print("GPU system level cache: \(slc) MB")
-      print("GPU memory: \(device.memory / gigabyte) GB")
+      
+      if device.memory % gigabyte == 0 {
+        print("GPU memory: \(device.memory / gigabyte) GB")
+      } else {
+        let memory_gigabytes = Double(device.memory) / Double(gigabyte)
+        print("GPU memory: \(rint(memory_gigabytes * 1e3) / 1e3) GB")
+      }
       
       // Print the Metal GPU family
       let delta = device.family.rawValue - MTLGPUFamily.apple2.rawValue
