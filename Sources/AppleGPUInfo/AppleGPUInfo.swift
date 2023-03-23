@@ -49,6 +49,9 @@ public extension AppleGPUDevice {
   var flops: Double
   
   /// Size of on-chip memory cache, in bytes.
+  ///
+  /// Do not assume a system-level cache exists; this property sometimes returns
+  /// zero. Provide fallbacks for optimizations that depend on SLC size.
   var systemLevelCache: Int
   
   /// Size of unified RAM, in bytes.
@@ -272,10 +275,8 @@ public class AppleGPUDevice {
       #else
       if name.starts(with: "Apple A") {
         switch generation {
-        case 8:
-          self._coreCount = 4
-        case 9:
-          fallthrough
+        case 8: _coreCount = 4
+        case 9: fallthrough
         case 10:
           switch tier {
           case .phone: _coreCount = 6
@@ -284,8 +285,7 @@ public class AppleGPUDevice {
             Unrecognized GPU: \(name)
             """)
           }
-        case 11:
-          self._coreCount = 3
+        case 11: _coreCount = 3
         case 12:
           switch tier {
           case .phone: _coreCount = 4
@@ -294,35 +294,24 @@ public class AppleGPUDevice {
             Unrecognized GPU: \(name)
             """)
           }
-        case 13:
-          fallthrough
-        case 14:
-          self._coreCount = 4
+        case 13: fallthrough
+        case 14: _coreCount = 4
         case 15:
-          // Need DeviceKit to distinguish iPhone 13 from 13 Pro
+          // Need DeviceKit to distinguish iPhone 13 from 13 Pro.
           switch deviceKitDevice {
-          case .iPhone13Mini:
-            fallthrough
-          case .iPhone13:
-            fallthrough
-          case .iPhoneSE3:
-            self._coreCount = 4
-          default:
-            self._coreCount = 5
+          case .iPhone13Mini: fallthrough
+          case .iPhone13: fallthrough
+          case .iPhoneSE3: _coreCount = 4
+          default: _coreCount = 5
           }
-        case 16:
-          fallthrough
-        default:
-          self._coreCount = 5
+        case 16: fallthrough
+        default: _coreCount = 5
         }
       } else {
         switch generation {
-        case 1:
-          self._coreCount = 8
-        case 2:
-          fallthrough
-        default:
-          self._coreCount = 10
+        case 1: _coreCount = 8
+        case 2: fallthrough
+        default: _coreCount = 10
         }
       }
       #endif
@@ -331,8 +320,26 @@ public class AppleGPUDevice {
     // Cache the clock frequency.
     do {
       if name.contains("Apple A") {
-        // TODO: Support iOS.
-        _clockFrequency = 0
+        switch generation {
+        case 7: _clockFrequency = 0.450e9
+        case 8: _clockFrequency = 0.533e9
+        case 9: _clockFrequency = 0.650e9
+        case 10:
+          if name.last == "X" {
+            // A10X
+            _clockFrequency = 1.000e9
+          } else {
+            // A10
+            _clockFrequency = 0.900e9
+          }
+        case 11: _clockFrequency = 1.066e9
+        case 12: _clockFrequency = 1.128e9
+        case 13: _clockFrequency = 1.230e9
+        case 14: _clockFrequency = 1.278e9
+        case 15: _clockFrequency = 1.338e9
+        case 16: fallthrough
+        default: _clockFrequency = 1.398e9
+        }
       } else {
         switch generation {
         case 1:
@@ -361,15 +368,47 @@ public class AppleGPUDevice {
     
     // Cache the bandwidth.
     do {
-      // clock: bits/second per LPDDR pin
+      // clock: 0.5 * bits/second per LPDDR pin
       // bits: size of memory interface
       func dataRate(clock: Double, bits: Int) -> Double {
-        return clock * Double(bits / 8)
+        return 2 * clock * Double(bits / 8)
       }
       
       if name.contains("Apple A") {
-        // TODO: Support iOS.
-        _bandwidth = 0
+        switch generation {
+        case 7: fallthrough
+        case 8:
+          if name.last == "X" {
+            // A8X
+            _bandwidth = dataRate(clock: 0.800e9, bits: 128)
+          } else {
+            // A8
+            _bandwidth = dataRate(clock: 0.800e9, bits: 64)
+          }
+        case 9: fallthrough
+        case 10:
+          if name.last == "X" {
+            // A9X, A10X
+            _bandwidth = dataRate(clock: 1.600e9, bits: 128)
+          } else {
+            // A9, A10
+            _bandwidth = dataRate(clock: 1.600e9, bits: 64)
+          }
+        case 11: fallthrough
+        case 12: fallthrough
+        case 13: fallthrough
+        case 14: fallthrough
+        case 15:
+          if name.last == "X" || name.last == "Z" {
+            // A12X, A12Z
+            _bandwidth = dataRate(clock: 2.133e9, bits: 128)
+          } else {
+            // A12
+            _bandwidth = dataRate(clock: 2.133e9, bits: 64)
+          }
+        case 16: fallthrough
+        default: _bandwidth = dataRate(clock: 3.200e9, bits: 64)
+        }
       } else {
         switch generation {
         case 1:
@@ -377,11 +416,11 @@ public class AppleGPUDevice {
           case .phone: throw AppleGPUError(description: """
             Unrecognized GPU: \(name)
             """)
-          case .base: _bandwidth = dataRate(clock: 4.266e9, bits: 128)
-          case .pro: _bandwidth = dataRate(clock: 6.400e9, bits: 256)
-          case .max: _bandwidth = dataRate(clock: 6.400e9, bits: 512)
-          case .ultra: _bandwidth = dataRate(clock: 6.400e9, bits: 1024)
-          case .unknown: _bandwidth = dataRate(clock: 6.400e9, bits: 1024)
+          case .base: _bandwidth = dataRate(clock: 2.133e9, bits: 128)
+          case .pro: _bandwidth = dataRate(clock: 3.200e9, bits: 256)
+          case .max: _bandwidth = dataRate(clock: 3.200e9, bits: 512)
+          case .ultra: _bandwidth = dataRate(clock: 3.200e9, bits: 1024)
+          case .unknown: _bandwidth = dataRate(clock: 3.200e9, bits: 1024)
           }
         case 2:
           fallthrough
@@ -390,11 +429,11 @@ public class AppleGPUDevice {
           case .phone: throw AppleGPUError(description: """
             Unrecognized GPU: \(name)
             """)
-          case .base: _bandwidth = dataRate(clock: 6.400e9, bits: 128)
-          case .pro: _bandwidth = dataRate(clock: 6.400e9, bits: 256)
-          case .max: _bandwidth = dataRate(clock: 6.400e9, bits: 512)
-          case .ultra: _bandwidth = dataRate(clock: 6.400e9, bits: 1024)
-          case .unknown: _bandwidth = dataRate(clock: 6.400e9, bits: 1024)
+          case .base: _bandwidth = dataRate(clock: 3.200e9, bits: 128)
+          case .pro: _bandwidth = dataRate(clock: 3.200e9, bits: 256)
+          case .max: _bandwidth = dataRate(clock: 3.200e9, bits: 512)
+          case .ultra: _bandwidth = dataRate(clock: 3.200e9, bits: 1024)
+          case .unknown: _bandwidth = dataRate(clock: 3.200e9, bits: 1024)
           }
         }
       }
@@ -411,8 +450,26 @@ public class AppleGPUDevice {
       let megabyte = 1024 * 1024
       
       if name.contains("Apple A") {
-        // TODO: Support iOS.
-        _systemLevelCache = 0
+        switch generation {
+        case 7: _systemLevelCache = 4 * megabyte
+        case 8: _systemLevelCache = 4 * megabyte
+        case 9: fallthrough
+        case 10:
+          if name.last == "X" {
+            // A9X, A10X
+            _systemLevelCache = 0
+          } else {
+            // A9, A11
+            _systemLevelCache = 4 * megabyte
+          }
+        case 11: _systemLevelCache = 4 * megabyte
+        case 12: _systemLevelCache = 8 * megabyte
+        case 13: _systemLevelCache = 16 * megabyte
+        case 14: _systemLevelCache = 16 * megabyte
+        case 15: _systemLevelCache = 32 * megabyte
+        case 16: fallthrough
+        default: _systemLevelCache = 24 * megabyte
+        }
       } else {
         switch generation {
         case 1:
@@ -511,6 +568,9 @@ public extension AppleGPUDevice {
   }
   
   /// Size of on-chip memory cache, in bytes.
+  ///
+  /// Do not assume a system-level cache exists; this property sometimes returns
+  /// zero. Provide fallbacks for optimizations that depend on SLC size.
   var systemLevelCache: Int {
     return _systemLevelCache
   }
@@ -708,6 +768,9 @@ internal func AppleGPUDevice_flops(
 }
 
 /// Size of on-chip memory cache, in bytes.
+///
+/// Do not assume a system-level cache exists; this property sometimes returns
+/// zero. Provide fallbacks for optimizations that depend on SLC size.
 @_cdecl("AppleGPUDevice_systemLevelCache")
 @usableFromInline
 internal func AppleGPUDevice_systemLevelCache(
