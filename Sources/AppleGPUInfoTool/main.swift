@@ -74,6 +74,7 @@ struct List: ParsableCommand {
       print("GPU clock frequency: \(device.clockFrequency / 1e9) GHz")
       print("GPU bandwidth: \(device.bandwidth / 1e9) GB/s")
       print("GPU FLOPS: \(rint(device.flops / 1e9) / 1e3) TFLOPS")
+      print("GPU IPS: \(rint(device.ips / 1e9) / 1e3) TIPS")
       
       let megabyte = 1024 * 1024
       let gigabyte = 1024 * 1024 * 1024

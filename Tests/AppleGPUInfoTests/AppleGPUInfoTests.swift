@@ -95,7 +95,7 @@ class AppleGPUDeviceTests: XCTestCase {
   }
   
   // Test if the device has a positive flops value
-  func testFlopsIsPositive() {
+  func testFLOPSIsPositive() {
     // Act: get the flops property
     let flops = device.flops
     let cFlops = AppleGPUDevice_flops(cDevice)
@@ -103,6 +103,17 @@ class AppleGPUDeviceTests: XCTestCase {
     // Assert: check if it is greater than zero
     XCTAssertGreaterThan(flops, 0, "Flops should be positive.")
     XCTAssertGreaterThan(cFlops, 0, "Flops should be positive.")
+  }
+  
+  // Test if the device has a positive instructins per second value
+  func testIPSIsPositive() {
+    // Act: get the instructions per second property
+    let ips = device.ips
+    let cIPS = AppleGPUDevice_ips(cDevice)
+    
+    // Assert: check if it is greater than zero
+    XCTAssertGreaterThan(ips, 0, "IPS should be positive.")
+    XCTAssertGreaterThan(cIPS, 0, "IPS should be positive.")
   }
   
   // Test if the device has a positive system level cache size

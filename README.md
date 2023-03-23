@@ -8,11 +8,12 @@ Listed parameters:
 - Clock frequency ✅
 - Bandwidth ✅
 - FLOPS ✅
+- Instructions per second ✅
 - System-level cache ✅
 - Memory ✅
 - Family ✅
 
-TODO: Deploy to Homebrew and Swift Package Registry, port to iOS, release v1.0.1.
+TODO: Deploy to Homebrew and Swift Package Registry, release v1.0.1.
 
 ## Usage
 

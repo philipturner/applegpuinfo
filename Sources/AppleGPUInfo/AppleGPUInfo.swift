@@ -44,9 +44,16 @@ public extension AppleGPUDevice {
   
   /// Maximum theoretical number of floating-point operations per second.
   ///
-  /// The number of FP32 operations performed through fused muliply-add each
+  /// The number of FP32 operations performed through fused multiply-add each
   /// second. This is a singular noun.
   var flops: Double
+  
+  /// Maximum theoretical number of shader instructions per second.
+  ///
+  /// The number of integer add operations performed each second. See the
+  /// [Apple GPU ISA](https://github.com/dougallj/applegpu) for instances
+  /// where multiple operations can be fused into one shader instruction.
+  var ips: Double
   
   /// Size of on-chip memory cache, in bytes.
   ///
@@ -122,6 +129,7 @@ public class AppleGPUDevice {
   private let _clockFrequency: Double
   private let _bandwidth: Double
   private let _flops: Double
+  private let _ips: Double
   private let _systemLevelCache: Int
   private let _memory: Int
   private let _family: MTLGPUFamily
@@ -460,8 +468,30 @@ public class AppleGPUDevice {
         alusPerCore = 128
       }
       
-      let operationsPerClock = self._coreCount * alusPerCore * 2
+      // Two floating-point operations per FMA.
+      let fmaMultiplier = 2
+      let operationsPerClock = self._coreCount * alusPerCore * fmaMultiplier
       self._flops = Double(operationsPerClock) * _clockFrequency
+    }
+    
+    // Cache the instructions per second.
+    do {
+      // Number of Int32 ALUs per GPU core.
+      var alusPerCore: Int
+      
+      if name.contains("Apple A") {
+        if generation >= 11 {
+          alusPerCore = 128
+        } else {
+          alusPerCore = 64
+        }
+      } else {
+        // M-series chips.
+        alusPerCore = 128
+      }
+      
+      let operationsPerClock = Double(self._coreCount * alusPerCore)
+      self._ips = operationsPerClock * _clockFrequency
     }
     
     // Cache the system-level cache.
@@ -580,10 +610,19 @@ public extension AppleGPUDevice {
   
   /// Maximum theoretical number of floating-point operations per second.
   ///
-  /// The number of FP32 operations performed through fused muliply-add each
+  /// The number of FP32 operations performed through fused multiply-add each
   /// second. This is a singular noun.
   var flops: Double {
     return _flops
+  }
+  
+  /// Maximum theoretical number of shader instructions per second.
+  ///
+  /// The number of integer add operations performed each second. See the
+  /// [Apple GPU ISA](https://github.com/dougallj/applegpu) for instances
+  /// where multiple operations can be fused into one shader instruction.
+  var ips: Double {
+    return _ips
   }
   
   /// Size of on-chip memory cache, in bytes.
@@ -769,7 +808,7 @@ internal func AppleGPUDevice_bandwidth(
 
 /// Maximum theoretical number of floating-point operations per second.
 ///
-/// The number of FP32 operations performed through fused muliply-add each
+/// The number of FP32 operations performed through fused multiply-add each
 /// second. This is a singular noun.
 @_cdecl("AppleGPUDevice_flops")
 @usableFromInline
@@ -784,6 +823,26 @@ internal func AppleGPUDevice_flops(
   
   // Return the FLOPS.
   return Double(device.flops)
+}
+
+/// Maximum theoretical number of shader instructions per second.
+///
+/// The number of integer add operations performed each second. See the
+/// [Apple GPU ISA](https://github.com/dougallj/applegpu) for instances
+/// where multiple operations can be fused into one shader instruction.
+@_cdecl("AppleGPUDevice_ips")
+@usableFromInline
+internal func AppleGPUDevice_ips(
+  _ pointerDevice: UnsafeMutableRawPointer
+) -> Double {
+  // Get an unmanaged reference from pointerDevice
+  let unmanagedDevice = Unmanaged<AppleGPUDevice>.fromOpaque(pointerDevice)
+
+  // Get a Swift class object from unmanagedDevice
+  let device = unmanagedDevice.takeUnretainedValue()
+  
+  // Return the bandwidth.
+  return Double(device.ips)
 }
 
 /// Size of on-chip memory cache, in bytes.
