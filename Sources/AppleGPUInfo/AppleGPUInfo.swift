@@ -328,7 +328,7 @@ public class AppleGPUDevice {
         case 8: _clockFrequency = 0.533e9
         case 9: _clockFrequency = 0.650e9
         case 10:
-          if name.last == "X" {
+          if name.contains("X") {
             // A10X
             _clockFrequency = 1.000e9
           } else {
@@ -381,7 +381,7 @@ public class AppleGPUDevice {
         switch generation {
         case 7: fallthrough
         case 8:
-          if name.last == "X" {
+          if name.contains("X") {
             // A8X
             _bandwidth = dataRate(clock: 0.800e9, bits: 128)
           } else {
@@ -390,7 +390,7 @@ public class AppleGPUDevice {
           }
         case 9: fallthrough
         case 10:
-          if name.last == "X" {
+          if name.contains("X") {
             // A9X, A10X
             _bandwidth = dataRate(clock: 1.600e9, bits: 128)
           } else {
@@ -402,7 +402,7 @@ public class AppleGPUDevice {
         case 13: fallthrough
         case 14: fallthrough
         case 15:
-          if name.last == "X" || name.last == "Z" {
+          if name.contains("X") || name.contains("Z") {
             // A12X, A12Z
             _bandwidth = dataRate(clock: 2.133e9, bits: 128)
           } else {
@@ -474,7 +474,7 @@ public class AppleGPUDevice {
         case 8: _systemLevelCache = 4 * megabyte
         case 9: fallthrough
         case 10:
-          if name.last == "X" {
+          if name.contains("X") {
             // A9X, A10X
             _systemLevelCache = 0
           } else {
