@@ -5,94 +5,6 @@ import IOKit
 import DeviceKit
 #endif
 
-// Public API for the Swift file (feed this into GPT-4):
-#if false
-
-/// An error returned by the AppleGPUInfo library.
-public class GPUInfoError: Error {
-  /// The description of the error.
-  public var description: String
-  
-  /// Initialize the error object.
-  public init(description: String)
-}
-
-/// A data structure for querying parameters of an Apple-designed GPU.
-public class GPUInfoDevice {
-  /// Initialize the device object.
-  ///
-  /// Creating a `GPUInfoDevice` is an expensive operation. If possible, only
-  /// call this initializer once.
-  public init() throws
-}
-
-public extension GPUInfoDevice {
-  /// The full name of the GPU device.
-  var name: String
-  
-  /// Number of GPU cores.
-  var coreCount: Int
-  
-  /// Clock speed in Hz.
-  ///
-  /// Results should be cross-referenced with [philipturner/metal-benchmarks
-  /// ](https://github.com/philipturner/metal-benchmarks).
-  var clockFrequency: Double
-  
-  /// Maximum theoretical bandwidth to unified RAM, in bytes/second.
-  var bandwidth: Double
-  
-  /// Maximum theoretical number of floating-point operations per second.
-  ///
-  /// The number of FP32 operations performed through fused multiply-add each
-  /// second. This is a singular noun.
-  var flops: Double
-  
-  /// Maximum theoretical number of shader instructions per second.
-  ///
-  /// The number of integer add operations performed each second. See the
-  /// [Apple GPU ISA](https://github.com/dougallj/applegpu) for instances
-  /// where multiple operations can be fused into one shader instruction.
-  var ips: Double
-  
-  /// Size of on-chip memory cache, in bytes.
-  ///
-  /// Do not assume a system-level cache exists; this property sometimes returns
-  /// zero. Provide fallbacks for optimizations that depend on SLC size.
-  var systemLevelCache: Int
-  
-  /// Size of unified RAM, in bytes.
-  var memory: Int
-  
-  /// Metal GPU family.
-  var family: MTLGPUFamily
-}
-#endif
-
-fileprivate func handleSysctlError(
-  _ code: Int32,
-  line: UInt = #line,
-  file: StaticString = #file
-) throws {
-  guard code == 0 else {
-    var message = "Encountered sysctl error code \(code)"
-    message += " at \(file):\(line)"
-    throw GPUInfoError(description: message)
-  }
-}
-
-fileprivate func handleIORegistryError(
-  _ code: Int32,
-  line: UInt = #line,
-  file: StaticString = #file
-) throws {
-  guard code == 0 else {
-    var message = "Encountered IORegistry error code \(code)"
-    message += " at \(file):\(line)"
-    throw GPUInfoError(description: message)
-  }
-}
-
 /// An error returned by the AppleGPUInfo library.
 public class GPUInfoError: Error {
   /// The description of the error.
@@ -113,7 +25,67 @@ public class GPUInfoError: Error {
   }
 }
 
-/// Data structure for querying parameters of an Apple-designed GPU.
+public extension GPUInfoDevice {
+  /// The full name of the GPU device.
+  var name: String {
+    return _name
+  }
+  
+  /// The number of GPU cores.
+  var coreCount: Int {
+    return _coreCount
+  }
+  
+  /// The clock speed in Hz.
+  ///
+  /// Results should be cross-referenced with [philipturner/metal-benchmarks
+  /// ](https://github.com/philipturner/metal-benchmarks).
+  var clockFrequency: Double {
+    return _clockFrequency
+  }
+  
+  /// The maximum theoretical bandwidth to the unified RAM, in bytes/second.
+  var bandwidth: Double {
+    return _bandwidth
+  }
+  
+  /// The maximum theoretical number of floating-point operations per second.
+  ///
+  /// The number of `Float32` operations performed each second through fused
+  /// multiply-add.
+  var flops: Double {
+    return _flops
+  }
+  
+  /// The maximum theoretical number of shader instructions per second.
+  ///
+  /// The number of `Int32` add operations performed each second. See the
+  /// [Apple GPU ISA](https://github.com/dougallj/applegpu) for instances
+  /// where multiple operations can be fused into one shader instruction.
+  var ips: Double {
+    return _ips
+  }
+  
+  /// The size of the on-chip memory cache, in bytes.
+  ///
+  /// On iOS, this property will sometimes return zero. Provide fallbacks for
+  /// optimizations that depend on cache size.
+  var systemLevelCache: Int {
+    return _systemLevelCache
+  }
+  
+  /// The size of the unified RAM, in bytes.
+  var memory: Int {
+    return _memory
+  }
+  
+  /// The Metal GPU family.
+  var family: MTLGPUFamily {
+    return _family
+  }
+}
+
+/// Object for querying parameters of an Apple-designed GPU.
 public class GPUInfoDevice {
   // Objects for querying parameters.
   internal let mtlDevice: MTLDevice
@@ -168,8 +140,16 @@ public class GPUInfoDevice {
 
     // Get an iterator for matching services
     var iterator: io_iterator_t = 0
-    try handleIORegistryError(
-      IOServiceGetMatchingServices(kIOMainPortDefault, matchingDict, &iterator))
+    do {
+      let io_registry_error =
+        IOServiceGetMatchingServices(
+          kIOMainPortDefault, matchingDict, &iterator)
+      guard io_registry_error == 0 else {
+        throw GPUInfoError(description: """
+        Encountered IORegistry error code \(io_registry_error)
+        """)
+      }
+    }
 
     // Get the first (and only) GPU entry from the iterator
     self.gpuEntry = IOIteratorNext(iterator)
@@ -554,8 +534,13 @@ public class GPUInfoDevice {
       var memorySize: Int = 0
       var sizeOfInt: Int = 8
       do {
-        try handleSysctlError(
-          sysctlbyname("hw.memsize", &memorySize, &sizeOfInt, nil, 0))
+        let sysctl_error =
+          sysctlbyname("hw.memsize", &memorySize, &sizeOfInt, nil, 0)
+        guard sysctl_error == 0 else {
+          throw GPUInfoError(description: """
+            Encountered sysctl error code \(sysctl_error)
+            """)
+        }
       } catch {
         fatalError(error.localizedDescription)
       }
@@ -582,316 +567,4 @@ public class GPUInfoDevice {
     #endif
     _cName.deallocate()
   }
-}
-
-public extension GPUInfoDevice {
-  /// The full name of the GPU device.
-  var name: String {
-    return _name
-  }
-  
-  /// Number of GPU cores.
-  var coreCount: Int {
-    return _coreCount
-  }
-  
-  /// Clock speed in Hz.
-  ///
-  /// Results should be cross-referenced with [philipturner/metal-benchmarks
-  /// ](https://github.com/philipturner/metal-benchmarks).
-  var clockFrequency: Double {
-    return _clockFrequency
-  }
-  
-  /// Maximum theoretical bandwidth to unified RAM, in bytes/second.
-  var bandwidth: Double {
-    return _bandwidth
-  }
-  
-  /// Maximum theoretical number of floating-point operations per second.
-  ///
-  /// The number of FP32 operations performed through fused multiply-add each
-  /// second. This is a singular noun.
-  var flops: Double {
-    return _flops
-  }
-  
-  /// Maximum theoretical number of shader instructions per second.
-  ///
-  /// The number of integer add operations performed each second. See the
-  /// [Apple GPU ISA](https://github.com/dougallj/applegpu) for instances
-  /// where multiple operations can be fused into one shader instruction.
-  var ips: Double {
-    return _ips
-  }
-  
-  /// Size of on-chip memory cache, in bytes.
-  ///
-  /// Do not assume a system-level cache exists; this property sometimes returns
-  /// zero. Provide fallbacks for optimizations that depend on SLC size.
-  var systemLevelCache: Int {
-    return _systemLevelCache
-  }
-  
-  /// Size of unified RAM, in bytes.
-  var memory: Int {
-    return _memory
-  }
-  
-  /// Metal GPU family.
-  var family: MTLGPUFamily {
-    return _family
-  }
-}
-
-// C API - exported symbols loadable from the dylib.
-
-/// Initialize the error object.
-@_cdecl("GPUInfoError_init")
-@usableFromInline
-internal func GPUInfoError_init(
-  _ description: UnsafePointer<CChar>
-) -> UnsafeMutableRawPointer {
-  // Create a Swift class object
-  let error = GPUInfoError(
-    description: String(cString: description, encoding: .utf8)!)
-
-  // Convert it to an unsafe reference with +1 retain count
-  let unmanagedError = Unmanaged.passRetained(error)
-
-  // Get an UnsafeMutablePointer from unmanagedError
-  return unmanagedError.toOpaque()
-}
-
-/// Deinitialize the error object.
-@_cdecl("GPUInfoError_deinit")
-@usableFromInline
-internal func GPUInfoError_deinit(
-  _ pointerError: UnsafeMutableRawPointer
-) {
-  // Get an unmanaged reference from pointerError
-  let unmanagedError = Unmanaged<GPUInfoError>.fromOpaque(pointerError)
-  
-  // Release the object referenced by pointerError
-  unmanagedError.release()
-}
-
-/// The description of the error.
-@_cdecl("GPUInfoError_description")
-@usableFromInline
-internal func GPUInfoError_description(
-  _ pointerError: UnsafeMutableRawPointer
-) -> UnsafePointer<CChar> {
-  // Get an unmanaged reference from pointerError
-  let unmanagedError = Unmanaged<GPUInfoError>.fromOpaque(pointerError)
-  
-  // Get a Swift class reference to unmanagedError
-  let error = unmanagedError.takeUnretainedValue()
-  
-  // Return C-accessible copy of string contents
-  return UnsafePointer(error._cDescripton)
-}
-
-/// Initialize the device object, returning any errors at +1 refcount.
-///
-/// Creating an `GPUInfoDevice` is an expensive operation. If possible, only
-/// call this initializer once.
-@_cdecl("GPUInfoDevice_init")
-@usableFromInline
-internal func GPUInfoDevice_init(
-  _ pointerError: UnsafeMutablePointer<UnsafeMutableRawPointer?>
-) -> UnsafeMutableRawPointer? {
-  var device: GPUInfoDevice
-  
-  do {
-    // Create a Swift class object
-    device = try GPUInfoDevice()
-  } catch let error as GPUInfoError {
-    // Convert the error to an unsafe reference with +1 retain count
-    let unmanagedError = Unmanaged.passRetained(error)
-
-    // Get an UnsafeMutablePointer from unmanagedError
-    pointerError.pointee = unmanagedError.toOpaque()
-    
-    // Return early.
-    return nil
-  } catch {
-    fatalError("This should never happen!")
-  }
-
-  // Convert it to an unsafe reference with +1 retain count
-  let unmanagedDevice = Unmanaged.passRetained(device)
-
-  // Get an UnsafeMutablePointer from unmanagedDevice
-  return unmanagedDevice.toOpaque()
-}
-
-/// Deinitialize the device object.
-@_cdecl("GPUInfoDevice_deinit")
-@usableFromInline
-internal func GPUInfoDevice_deinit(
-  _ pointerDevice: UnsafeMutableRawPointer
-) {
-  // Get an unmanaged reference from pointerDevice
-  let unmanagedDevice = Unmanaged<GPUInfoError>.fromOpaque(pointerDevice)
-  
-  // Release the object referenced by pointerDevice
-  unmanagedDevice.release()
-}
-
-/// The full name of the GPU device.
-@_cdecl("GPUInfoDevice_name")
-@usableFromInline
-internal func GPUInfoDevice_name(
-  _ pointerDevice: UnsafeMutableRawPointer
-) -> UnsafePointer<CChar> {
-  // Get an unmanaged reference from pointerDevice
-  let unmanagedDevice = Unmanaged<GPUInfoDevice>.fromOpaque(pointerDevice)
-
-  // Get a Swift class object from unmanagedDevice
-  let device = unmanagedDevice.takeUnretainedValue()
-  
-  // Return C-accessible copy of string contents
-  return UnsafePointer(device._cName)
-}
-
-/// Number of GPU cores.
-@_cdecl("GPUInfoDevice_coreCount")
-@usableFromInline
-internal func GPUInfoDevice_coreCount(
-  _ pointerDevice: UnsafeMutableRawPointer
-) -> Int64 {
-  // Get an unmanaged reference from pointerDevice
-  let unmanagedDevice = Unmanaged<GPUInfoDevice>.fromOpaque(pointerDevice)
-
-  // Get a Swift class object from unmanagedDevice
-  let device = unmanagedDevice.takeUnretainedValue()
-  
-  // Return the core count.
-  return Int64(device.coreCount)
-}
-
-/// Clock speed in Hz.
-///
-/// Results should be cross-referenced with [philipturner/metal-benchmarks
-/// ](https://github.com/philipturner/metal-benchmarks).
-@_cdecl("GPUInfoDevice_clockFrequency")
-@usableFromInline
-internal func GPUInfoDevice_clockFrequency(
-  _ pointerDevice: UnsafeMutableRawPointer
-) -> Double {
-  // Get an unmanaged reference from pointerDevice
-  let unmanagedDevice = Unmanaged<GPUInfoDevice>.fromOpaque(pointerDevice)
-
-  // Get a Swift class object from unmanagedDevice
-  let device = unmanagedDevice.takeUnretainedValue()
-  
-  // Return the clock frequency.
-  return Double(device.clockFrequency)
-}
-
-/// Maximum theoretical bandwidth to unified RAM, in bytes/second.
-@_cdecl("GPUInfoDevice_bandwidth")
-@usableFromInline
-internal func GPUInfoDevice_bandwidth(
-  _ pointerDevice: UnsafeMutableRawPointer
-) -> Double {
-  // Get an unmanaged reference from pointerDevice
-  let unmanagedDevice = Unmanaged<GPUInfoDevice>.fromOpaque(pointerDevice)
-
-  // Get a Swift class object from unmanagedDevice
-  let device = unmanagedDevice.takeUnretainedValue()
-  
-  // Return the bandwidth.
-  return Double(device.bandwidth)
-}
-
-/// Maximum theoretical number of floating-point operations per second.
-///
-/// The number of FP32 operations performed through fused multiply-add each
-/// second. This is a singular noun.
-@_cdecl("GPUInfoDevice_flops")
-@usableFromInline
-internal func GPUInfoDevice_flops(
-  _ pointerDevice: UnsafeMutableRawPointer
-) -> Double {
-  // Get an unmanaged reference from pointerDevice
-  let unmanagedDevice = Unmanaged<GPUInfoDevice>.fromOpaque(pointerDevice)
-
-  // Get a Swift class object from unmanagedDevice
-  let device = unmanagedDevice.takeUnretainedValue()
-  
-  // Return the FLOPS.
-  return Double(device.flops)
-}
-
-/// Maximum theoretical number of shader instructions per second.
-///
-/// The number of integer add operations performed each second. See the
-/// [Apple GPU ISA](https://github.com/dougallj/applegpu) for instances
-/// where multiple operations can be fused into one shader instruction.
-@_cdecl("GPUInfoDevice_ips")
-@usableFromInline
-internal func GPUInfoDevice_ips(
-  _ pointerDevice: UnsafeMutableRawPointer
-) -> Double {
-  // Get an unmanaged reference from pointerDevice
-  let unmanagedDevice = Unmanaged<GPUInfoDevice>.fromOpaque(pointerDevice)
-
-  // Get a Swift class object from unmanagedDevice
-  let device = unmanagedDevice.takeUnretainedValue()
-  
-  // Return the bandwidth.
-  return Double(device.ips)
-}
-
-/// Size of on-chip memory cache, in bytes.
-///
-/// Do not assume a system-level cache exists; this property sometimes returns
-/// zero. Provide fallbacks for optimizations that depend on SLC size.
-@_cdecl("GPUInfoDevice_systemLevelCache")
-@usableFromInline
-internal func GPUInfoDevice_systemLevelCache(
-  _ pointerDevice: UnsafeMutableRawPointer
-) -> Int64 {
-  // Get an unmanaged reference from pointerDevice
-  let unmanagedDevice = Unmanaged<GPUInfoDevice>.fromOpaque(pointerDevice)
-
-  // Get a Swift class object from unmanagedDevice
-  let device = unmanagedDevice.takeUnretainedValue()
-  
-  // Return the system level cache.
-  return Int64(device.systemLevelCache)
-}
-
-/// Size of unified RAM, in bytes.
-@_cdecl("GPUInfoDevice_memory")
-@usableFromInline
-internal func GPUInfoDevice_memory(
-  _ pointerDevice: UnsafeMutableRawPointer
-) -> Int64 {
-  // Get an unmanaged reference from pointerDevice
-  let unmanagedDevice = Unmanaged<GPUInfoDevice>.fromOpaque(pointerDevice)
-
-  // Get a Swift class object from unmanagedDevice
-  let device = unmanagedDevice.takeUnretainedValue()
-  
-  // Return the system level cache.
-  return Int64(device.memory)
-}
-
-/// Metal GPU family (as an integer).
-@_cdecl("GPUInfoDevice_family")
-@usableFromInline
-internal func GPUInfoDevice_family(
-  _ pointerDevice: UnsafeMutableRawPointer
-) -> Int64 {
-  // Get an unmanaged reference from pointerDevice
-  let unmanagedDevice = Unmanaged<GPUInfoDevice>.fromOpaque(pointerDevice)
-
-  // Get a Swift class object from unmanagedDevice
-  let device = unmanagedDevice.takeUnretainedValue()
-  
-  // Return the system level cache.
-  return Int64(device.family.rawValue)
 }

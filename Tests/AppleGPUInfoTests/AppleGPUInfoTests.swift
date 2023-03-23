@@ -1,21 +1,6 @@
 import XCTest
 @testable import AppleGPUInfo
 
-final class AppleGPUInfoTests: XCTestCase {
-  // Generated using GPT-4. Methodology:
-  // - Feed the interface blurb from "GPUInfo.swift" into the chat.
-  // - Ask for a test case, copy and refine what it tests.
-  // - If it missed anything, ask for that as well.
-  func testDeviceParameters() throws {
-      
-  }
-}
-
-// Auto-generated.
-
-import XCTest
-@testable import AppleGPUInfo
-
 class GPUInfoDeviceTests: XCTestCase {
   // A test device instance
   var device: GPUInfoDevice!

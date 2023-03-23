@@ -5,16 +5,6 @@
 //  Created by Philip Turner on 3/19/23.
 //
 
-import AppleGPUInfo
-
-// Generated using GPT-4. Methodology:
-// - Feed the interface blurb from "GPUInfo.swift" into the chat.
-// - Ask it to write a simple command-line tool that extracts all the parameters
-//   from the `GPUInfoDevice`, then outputs them using `print`. The tool should
-//   be written in Swift.
-
-// Auto-generated.
-
 import Foundation
 import AppleGPUInfo
 import ArgumentParser
