@@ -2,6 +2,8 @@
 
 This is a mini-framework for querying parameters of an Apple-designed GPU. It also contains a command-line tool, `gpuinfo`, which reports information similarly to [clinfo](https://github.com/Oblomov/clinfo). It was co-authored with an AI.
 
+## Features
+
 Listed parameters:
 - Name ✅
 - Core count ✅
@@ -12,6 +14,11 @@ Listed parameters:
 - System-level cache ✅
 - Memory ✅
 - Family ✅
+
+Interfaces:
+- Swift module
+- C bindings
+- Command-line tool
 
 ## Usage
 
