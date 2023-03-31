@@ -20,6 +20,12 @@ Interfaces:
 - C bindings
 - Command-line tool
 
+Recognized devices:
+- A7 - A16
+- M1 - M1 Ultra
+- M2 - M2 Max
+- Future devices treated like the closest existing analog (e.g. A17 like A16)
+
 ## Usage
 
 One way to use this library is from the command-line:
