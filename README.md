@@ -74,6 +74,17 @@ Documentation of AI contributions: [bing-conversation.md](./Documentation/bing-c
 
 After creating the first release of the library, I have continued experimenting with workflows accelerated by _free_ access to GPT-4. The above document details these subsequent modifications to the library.
 
+## Testing
+
+This framework is confirmed to work on the following devices. If anyone wishes to contribute to this list, please paste the output of `gpuinfo` into a new GitHub issue. Different variations of the same chip (e.g. different cores or memory) are welcome.
+
+| Production Year | Chip | Cores | SLC | Memory | Bandwidth | TFLOPS |
+| --------------- | --- | ----- | ------ | ---- | --------- | ------ |
+| 2017 | A10X   | 12 | 0 MB | 4 GB | 68.2 GB/s | 0.768 |
+| 2021 | M1 Max | 32 | 48 MB | 32 GB | 409.6 GB/s | 10.617 |
+| 2021 | A15    | 5  | 24 MB | 5.6 GB | 34.1 GB/s | 1.789 |
+| 2023 | M2 Pro | 19 | 24 MB | 32 GB | 204.8 GB/s | 6.800 |
+
 ## Attribution
 
 This project was made possible by [GPT-4](https://openai.com/research/gpt-4), accessed through Bing Chat.
