@@ -362,7 +362,7 @@ public class GPUInfoDevice {
     // Cache the bandwidth.
     do {
       // clock: 0.5 * bits/second per LPDDR pin
-      // bits: size of memory interface
+      // bits: number of pins in memory interface
       func dataRate(clock: Double, bits: Int) -> Double {
         return 2 * clock * Double(bits / 8)
       }
