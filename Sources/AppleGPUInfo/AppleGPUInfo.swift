@@ -551,7 +551,8 @@ public class GPUInfoDevice {
     
     // Cache the family.
     do {
-      var maxRecognized: MTLGPUFamily = .apple8
+      // Apple 8 (1000 + 8)
+      var maxRecognized: MTLGPUFamily = .init(rawValue: 1008)!
       while maxRecognized.rawValue >= 0 {
         if mtlDevice.supportsFamily(maxRecognized) {
           break
