@@ -9,7 +9,7 @@ Listed parameters:
 - Core count ✅
 - Clock frequency ✅
 - Bandwidth ✅
-- FLOPS ✅
+- FLOPS (FP32 operations per second) ✅
 - IPS (shader instructions per second) ✅
 - System-level cache ✅
 - Memory ✅
