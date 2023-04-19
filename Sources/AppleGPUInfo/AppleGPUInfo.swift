@@ -268,6 +268,7 @@ public class GPUInfoDevice {
       #else
       if name.starts(with: "Apple A") {
         switch generation {
+        case 7: fallthrough
         case 8: _coreCount = 4
         case 9: fallthrough
         case 10:
