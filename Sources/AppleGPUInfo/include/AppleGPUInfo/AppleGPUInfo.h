@@ -77,5 +77,4 @@ int64_t GPUInfoDevice_family(void* pointerDevice);
 
 }
 
-
 #endif /* AppleGPUInfo_h */
