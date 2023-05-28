@@ -6,6 +6,7 @@ This is a mini-framework for querying parameters of an Apple-designed GPU. It al
 
 Listed parameters:
 - Name ✅
+- Vendor ✅
 - Core count ✅
 - Clock frequency ✅
 - Bandwidth ✅
@@ -17,7 +18,7 @@ Listed parameters:
 
 Interfaces:
 - Swift module
-- C bindings
+- [C bindings](./Sources/AppleGPUInfo/include/AppleGPUInfo/AppleGPUInfo.h)
 - Command-line tool
 
 Recognized devices:
@@ -37,6 +38,7 @@ swift run gpuinfo list
 
 # Sample output
 GPU name: Apple M1 Max
+GPU vendor: Apple
 GPU core count: 32
 GPU clock frequency: 1.296 GHz
 GPU bandwidth: 409.6 GB/s

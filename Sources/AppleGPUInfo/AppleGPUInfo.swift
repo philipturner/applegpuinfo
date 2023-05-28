@@ -1,5 +1,7 @@
 import Metal
-#if os(macOS)
+#if arch(x86_64)
+import OpenCL
+#elseif os(macOS)
 import IOKit
 #else
 import DeviceKit
@@ -20,6 +22,7 @@ public class GPUInfoError: Error {
     strcpy(_cDescripton, description)
   }
   
+  /// Deinitialize the error object.
   deinit {
     _cDescripton.deallocate()
   }
@@ -29,6 +32,11 @@ public extension GPUInfoDevice {
   /// The full name of the GPU device.
   var name: String {
     return _name
+  }
+  
+  /// The manufacturer of the GPU device.
+  var vendor: String {
+    return _vendor
   }
   
   /// The number of GPU cores.
@@ -44,7 +52,7 @@ public extension GPUInfoDevice {
     return _clockFrequency
   }
   
-  /// The maximum theoretical bandwidth to the unified random-access memory, in
+  /// The maximum theoretical bandwidth to random-access memory, in
   /// bytes/second.
   var bandwidth: Double {
     return _bandwidth
@@ -76,7 +84,7 @@ public extension GPUInfoDevice {
     return _systemLevelCache
   }
   
-  /// The size of the unified random-access memory, in bytes.
+  /// The size of the device's random-access memory, in bytes.
   var memory: Int {
     return _memory
   }
@@ -91,14 +99,17 @@ public extension GPUInfoDevice {
 public class GPUInfoDevice {
   // Objects for querying parameters.
   internal let mtlDevice: MTLDevice
-  #if os(macOS)
+#if arch(x86_64)
+  // TODO: Property for the OpenCL device
+#elseif os(macOS)
   internal let gpuEntry: io_registry_entry_t
-  #else
+#else
   internal let deviceKitDevice: Device
-  #endif
+#endif
   
   // Cached values to decrease retrieval overhead.
   private let _name: String
+  private let _vendor: String
   private let _coreCount: Int
   private let _clockFrequency: Double
   private let _bandwidth: Double
@@ -110,23 +121,59 @@ public class GPUInfoDevice {
   
   /// For compatibility with the C API, store an explicit C string.
   internal let _cName: UnsafeMutablePointer<CChar>
+  internal let _cVendor: UnsafeMutablePointer<CChar>
   
   /// Initialize the device object.
   ///
   /// Creating a `GPUInfoDevice` is a costly operation. If possible, create one
   /// object and use it multiple times.
   public init() throws {
-    #if os(macOS)
-    let devices = MTLCopyAllDevices()
-    guard let appleDevice = devices.first(where: {
-      $0.supportsFamily(.apple1)
-    }) else {
-      throw GPUInfoError(description: "This device does is not an Apple GPU.")
+    // Intel Macs may have multiple GPUs. The simplest way to let the user
+    // choose is through a registry ID environment variable. This code path
+    // should also activate on Apple chips for debugging purposes.
+    var registryID: UInt64?
+    if let cString = getenv("GPUINFO_REGISTRY_ID") {
+      let stringValue = String(cString: cString)
+      guard let integerValue = UInt64(stringValue) else {
+        let message = "Invalid registry ID: '\(stringValue)'"
+        throw GPUInfoError(description: message)
+      }
+      registryID = integerValue
     }
-    self.mtlDevice = appleDevice
-    #else
+    
+#if os(macOS)
+    let devices = MTLCopyAllDevices()
+    var selectedDevice = devices.first!
+    for device in devices {
+      var newDevice: MTLDevice
+      if let registryID {
+        guard device.registryID == registryID else {
+          continue
+        }
+        newDevice = device
+      } else {
+        // If there is an AMD GPU, choose it over the Intel GPU. If there are
+        // multiple AMD GPUs, this logic statement chooses the first one.
+        guard !device.isLowPower && selectedDevice.isLowPower else {
+          continue
+        }
+        newDevice = device
+      }
+      selectedDevice = newDevice
+    }
+    self.mtlDevice = selectedDevice
+#else
     self.mtlDevice = MTLCreateSystemDefaultDevice()!
-    #endif
+#endif
+    
+    // If specified, ensure a device matching the registry ID was found.
+    if let registryID {
+      guard mtlDevice.registryID == registryID else {
+        var message = "Could not find device matching registry ID:"
+        message += " '\(registryID)'."
+        throw GPUInfoError(description: message)
+      }
+    }
     
     // Cache the name.
     do {
@@ -135,38 +182,55 @@ public class GPUInfoDevice {
       strcpy(_cName, _name)
     }
     
-    #if os(macOS)
-    // IOKit
+    // Cache the vendor.
+    do {
+#if arch(x86_64)
+      if mtlDevice.isLowPower {
+        self._vendor = "Intel"
+      } else {
+        self._vendor = "AMD"
+      }
+#else
+      self._vendor = "Apple"
+#endif
+      self._cVendor = .allocate(capacity: _vendor.count)
+      strcpy(_cVendor, _vendor)
+    }
+    
+#if arch(x86_64)
+    // Use OpenCL to query device properties.
+    fatalError("Intel Macs are not supported yet.")
+#elseif os(macOS)
     // Create a matching dictionary with "AGXAccelerator" class name
     let matchingDict = IOServiceMatching("AGXAccelerator")
-
+    
     // Get an iterator for matching services
     var iterator: io_iterator_t = 0
     do {
       let io_registry_error =
-        IOServiceGetMatchingServices(
-          kIOMainPortDefault, matchingDict, &iterator)
+      IOServiceGetMatchingServices(
+        kIOMainPortDefault, matchingDict, &iterator)
       guard io_registry_error == 0 else {
         throw GPUInfoError(description: """
         Encountered IORegistry error code \(io_registry_error)
         """)
       }
     }
-
+    
     // Get the first (and only) GPU entry from the iterator
     self.gpuEntry = IOIteratorNext(iterator)
-
+    
     // Check if the entry is valid
     if gpuEntry == MACH_PORT_NULL {
       throw GPUInfoError(
         description: "Error getting GPU entry at \(#file):\(#line - 5)")
     }
-
+    
     // Release the iterator
     IOObjectRelease(iterator)
-    #else
+#else
     self.deviceKitDevice = Device.current
-    #endif
+#endif
     
     // Tier for calculating clock frequencies and other statistics.
     enum Tier {
@@ -228,23 +292,25 @@ public class GPUInfoDevice {
     
     // Cache the core count.
     do {
-      #if os(macOS)
+#if arch(x86_64)
+      
+#elseif os(macOS)
       // Get the "gpu-core-count" property from gpuEntry
       let key = "gpu-core-count"
       let options: IOOptionBits = 0 // No options needed
       let gpuCoreCount = IORegistryEntrySearchCFProperty(
         gpuEntry, kIOServicePlane, key as CFString, nil, options)
-
+      
       // Check if the property is valid
       if gpuCoreCount == nil {
         throw GPUInfoError(description: """
           Error getting gpu-core-count property at \(#file):\(#line - 6)
           """)
       }
-
+      
       // Cast the property to CFNumberRef
       let gpuCoreCountNumber = gpuCoreCount as! CFNumber
-
+      
       // Check if the number type is sInt64
       let type = CFNumberGetType(gpuCoreCountNumber)
       if type != .sInt64Type {
@@ -252,11 +318,11 @@ public class GPUInfoDevice {
           Error: gpu-core-count is not sInt64 at \(#file):\(#line - 3)
           """)
       }
-
+      
       // Get the value of the number as Int64
       var value: Int64 = 0
       let result = CFNumberGetValue(gpuCoreCountNumber, type, &value)
-
+      
       // Check for errors
       if result == false {
         throw GPUInfoError(description: """
@@ -265,7 +331,7 @@ public class GPUInfoDevice {
       }
       
       self._coreCount = Int(value)
-      #else
+#else
       if name.starts(with: "Apple A") {
         switch generation {
         case 7: fallthrough
@@ -308,7 +374,7 @@ public class GPUInfoDevice {
         default: _coreCount = 10
         }
       }
-      #endif
+#endif
     }
     
     // Cache the clock frequency.
@@ -538,7 +604,7 @@ public class GPUInfoDevice {
       var sizeOfInt: Int = 8
       do {
         let sysctl_error =
-          sysctlbyname("hw.memsize", &memorySize, &sizeOfInt, nil, 0)
+        sysctlbyname("hw.memsize", &memorySize, &sizeOfInt, nil, 0)
         guard sysctl_error == 0 else {
           throw GPUInfoError(description: """
             Encountered sysctl error code \(sysctl_error)
@@ -565,10 +631,14 @@ public class GPUInfoDevice {
     }
   }
   
+  /// Deinitialize the device object.
   deinit {
-    #if os(macOS)
+    #if arch(x86_64)
+    
+    #elseif os(macOS)
     IOObjectRelease(gpuEntry)
     #endif
     _cName.deallocate()
+    _cVendor.deallocate()
   }
 }

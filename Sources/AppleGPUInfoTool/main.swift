@@ -60,6 +60,7 @@ struct List: ParsableCommand {
       //
       // I changed the public API so that it provided a name.
       print("GPU name: \(device.name)")
+      print("GPU vendor: \(device.vendor)")
       print("GPU core count: \(device.coreCount)")
       print("GPU clock frequency: \(device.clockFrequency / 1e9) GHz")
       print("GPU bandwidth: \(device.bandwidth / 1e9) GB/s")
