@@ -127,7 +127,16 @@ public class GPUInfoDevice {
   ///
   /// Creating a `GPUInfoDevice` is a costly operation. If possible, create one
   /// object and use it multiple times.
-  public init() throws {
+  public convenience init() throws {
+    try self.init(_registryID: nil)
+  }
+  
+  // TODO: Document this in the Swift and C APIs, add to the C header.
+  public convenience init(registryID: UInt64) throws {
+    try self.init(_registryID: registryID)
+  }
+  
+  private init(_registryID: UInt64?) throws {
     // Intel Macs may have multiple GPUs. The simplest way to let the user
     // choose is through a registry ID environment variable. This code path
     // should also activate on Apple chips for debugging purposes.
@@ -140,6 +149,9 @@ public class GPUInfoDevice {
       }
       registryID = integerValue
     }
+    
+    // The function parameter should override the environment variable.
+    registryID = _registryID ?? registryID
     
 #if os(macOS)
     let devices = MTLCopyAllDevices()
