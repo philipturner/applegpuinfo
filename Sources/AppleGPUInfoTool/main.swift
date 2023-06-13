@@ -50,38 +50,11 @@ struct List: ParsableCommand {
   func run() throws {
     do {
       // Create an instance of GPUInfoDevice using its initializer
-      let device = try GPUInfoDevice()
-      
-      // Print out some information about the device using its properties
-//      print("GPU device name: \(device.mtlDevice.name)")
-      
-      // EDIT: Above is the only source of a compiler error that required
-      // modification. `mtlDevice` is internal and can't be accessed this way.
-      //
-      // I changed the public API so that it provided a name.
-      print("GPU name: \(device.name)")
-      print("GPU vendor: \(device.vendor)")
-      print("GPU core count: \(device.coreCount)")
-      print("GPU clock frequency: \(device.clockFrequency / 1e9) GHz")
-      print("GPU bandwidth: \(device.bandwidth / 1e9) GB/s")
-      print("GPU FLOPS: \(rint(device.flops / 1e9) / 1e3) TFLOPS")
-      print("GPU IPS: \(rint(device.ips / 1e9) / 1e3) TIPS")
-      
-      let megabyte = 1024 * 1024
-      let gigabyte = 1024 * 1024 * 1024
-      let slc = device.systemLevelCache / megabyte
-      print("GPU system level cache: \(slc) MB")
-      
-      if device.memory % gigabyte == 0 {
-        print("GPU memory: \(device.memory / gigabyte) GB")
-      } else {
-        let memory_gigabytes = Double(device.memory) / Double(gigabyte)
-        print("GPU memory: \(rint(memory_gigabytes * 1e3) / 1e3) GB")
+      let error = setenv("GPUINFO_LOG_LEVEL", "1", 1)
+      if error != 0 {
+        print("`setenv` failed with error code '\(error)'.")
       }
-      
-      // Print the Metal GPU family
-      let delta = device.family.rawValue - MTLGPUFamily.apple1.rawValue
-      print("GPU family: Apple \(delta + 1)")
+      _ = try GPUInfoDevice()
     } catch {
       // Handle any errors that may occur
       print("Error: \(error.localizedDescription)")

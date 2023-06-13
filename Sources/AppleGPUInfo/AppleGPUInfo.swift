@@ -641,6 +641,54 @@ public class GPUInfoDevice {
       }
       self._family = maxRecognized
     }
+    
+    // Print hardware information if requested.
+    var logLevel: UInt64?
+    if let cString = getenv("GPUINFO_LOG_LEVEL") {
+      let stringValue = String(cString: cString)
+      guard let integerValue = UInt64(stringValue) else {
+        let message = "Invalid log level: '\(stringValue)'"
+        throw GPUInfoError(description: message)
+      }
+      logLevel = integerValue
+    }
+    if let logLevel, logLevel >= 1 {
+      logHardwareSpecifications()
+    }
+  }
+  
+  /// Log hardware information to the console.
+  private func logHardwareSpecifications() {
+    // Print out some information about the device using its properties
+//      print("GPU device name: \(device.mtlDevice.name)")
+    
+    // EDIT: Above is the only source of a compiler error that required
+    // modification. `mtlDevice` is internal and can't be accessed this way.
+    //
+    // I changed the public API so that it provided a name.
+    print("GPU name: \(self.name)")
+    print("GPU vendor: \(self.vendor)")
+    print("GPU core count: \(self.coreCount)")
+    print("GPU clock frequency: \(self.clockFrequency / 1e9) GHz")
+    print("GPU bandwidth: \(self.bandwidth / 1e9) GB/s")
+    print("GPU FLOPS: \(rint(self.flops / 1e9) / 1e3) TFLOPS")
+    print("GPU IPS: \(rint(self.ips / 1e9) / 1e3) TIPS")
+    
+    let megabyte = 1024 * 1024
+    let gigabyte = 1024 * 1024 * 1024
+    let slc = self.systemLevelCache / megabyte
+    print("GPU system level cache: \(slc) MB")
+    
+    if self.memory % gigabyte == 0 {
+      print("GPU memory: \(self.memory / gigabyte) GB")
+    } else {
+      let memory_gigabytes = Double(self.memory) / Double(gigabyte)
+      print("GPU memory: \(rint(memory_gigabytes * 1e3) / 1e3) GB")
+    }
+    
+    // Print the Metal GPU family
+    let delta = self.family.rawValue - MTLGPUFamily.apple1.rawValue
+    print("GPU family: Apple \(delta + 1)")
   }
   
   /// Deinitialize the device object.
