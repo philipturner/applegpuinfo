@@ -52,7 +52,7 @@ struct List: ParsableCommand {
       // Create an instance of GPUInfoDevice using its initializer
       let error = setenv("GPUINFO_LOG_LEVEL", "1", 1)
       if error != 0 {
-        print("`setenv` failed with error code '\(error)'.")
+        print("'setenv' failed with error code '\(error)'.")
       }
       _ = try GPUInfoDevice()
     } catch {
