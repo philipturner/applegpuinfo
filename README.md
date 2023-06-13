@@ -91,10 +91,10 @@ This framework is confirmed to work on the following devices. If anyone wishes t
 | 2023 | M2 Pro   | 19 | 24 MB |   32 GB | 204.8 GB/s |  6.800 |
 
 On iOS, you need to create an Xcode project. 
-- Go to <b>File</b> > <b>New</b> > <b>Project</b> > <b>iOS</b> > <b>App</b>. 
-- Click <b>Next</b>, ensure the interface is <b>SwiftUI</b>, and give it a name. Click <b>Next</b> > <b>Create</b>.
-- Go to <b>File</b> > <b>Add Package Dependencies</b> > <b>Search or Enter Package URL</b>. Type https://github.com/philipturner/applegpuinfo and click <b>Add Package</b>.
-- Select the <b>AppleGPUInfo</b> product of kind <b>Library</b>, then <b>Add Package</b>.
+- Go to <b>File > New > Project > iOS > App</b>. 
+- Click <b>Next</b>, ensure the interface is <b>SwiftUI</b>, and give the project a name. Click <b>Next > Create</b>.
+- Go to <b>File > Add Package Dependencies > Search or Enter Package URL</b>. Type https://github.com/philipturner/applegpuinfo and click <b>Add Package</b>.
+- Select the <b>AppleGPUInfo</b> product of kind <b>Library</b>, then click <b>Add Package</b>.
 - Replace the code in `ContentView.swift` with the demonstration below.
 - Press `Cmd + R` and look for text in the Xcode console.
 - Paste the console output into a [GitHub issue](https://github.com/philipturner/applegpuinfo/issues).
