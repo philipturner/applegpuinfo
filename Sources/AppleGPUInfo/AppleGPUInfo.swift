@@ -670,7 +670,7 @@ public class GPUInfoDevice {
     print("GPU vendor: \(self.vendor)")
     print("GPU core count: \(self.coreCount)")
     print("GPU clock frequency: \(self.clockFrequency / 1e9) GHz")
-    print("GPU bandwidth: \(self.bandwidth / 1e9) GB/s")
+    print("GPU bandwidth: \(rint(self.bandwidth / 1e8) / 1e1) GB/s")
     print("GPU FLOPS: \(rint(self.flops / 1e9) / 1e3) TFLOPS")
     print("GPU IPS: \(rint(self.ips / 1e9) / 1e3) TIPS")
     
@@ -683,7 +683,7 @@ public class GPUInfoDevice {
       print("GPU memory: \(self.memory / gigabyte) GB")
     } else {
       let memory_gigabytes = Double(self.memory) / Double(gigabyte)
-      print("GPU memory: \(rint(memory_gigabytes * 1e3) / 1e3) GB")
+      print("GPU memory: \(rint(memory_gigabytes * 1e2) / 1e2) GB")
     }
     
     // Print the Metal GPU family

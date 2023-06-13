@@ -82,12 +82,34 @@ This framework is confirmed to work on the following devices. If anyone wishes t
 
 | Production Year | Chip | Cores | SLC | Memory | Bandwidth | TFLOPS |
 | --------------- | --- | ----- | ------ | ---- | --------- | ------ |
-| 2017 | A10X     | 12 | 0 MB | 4 GB | 68.2 GB/s | 0.768 |
-| 2021 | A15      | 5  | 32 MB | 5.6 GB | 34.1 GB/s | 1.789 |
-| 2021 | M1 Pro   | 16 | 24 MB | 32 GB | 204.8 GB/s | 5.308 |
-| 2021 | M1 Max   | 32 | 48 MB | 32 GB | 409.6 GB/s | 10.617 |
-| 2022 | M1 Ultra | 48 | 96 MB | 64 GB | 819.2 GB/s | 15.925 |
-| 2023 | M2 Pro   | 19 | 24 MB | 32 GB | 204.8 GB/s | 6.800 |
+| 2017 | A10X     | 12 | 0 MB  | 4 GB     |   68.2 GB/s |  0.768 |
+| 2021 | A15      | 5  | 32 MB | 5.494 GB | 34.128 GB/s |  1.713 |
+| 2021 | M1 Pro   | 16 | 24 MB | 32 GB    |  204.8 GB/s |  5.308 |
+| 2021 | M1 Max   | 32 | 48 MB | 32 GB    |  409.6 GB/s | 10.617 |
+| 2022 | M1 Ultra | 48 | 96 MB | 64 GB    |  819.2 GB/s | 15.925 |
+| 2023 | M2 Pro   | 19 | 24 MB | 16 GB    |  204.8 GB/s |  6.800 |
+| 2023 | M2 Pro   | 19 | 24 MB | 32 GB    |  204.8 GB/s |  6.800 |
+
+<!--
+
+On iOS, you will need to create an Xcode project. 
+- Go to <b>File</b> > <b>New</b> > <b>Project</b> > <b>iOS</b> > <b>App</b>. 
+- Click <b>Next</b>, ensure the interface is <b>SwiftUI</b>, and give it a name. Click <b>Next</b> > <b>Create</b>.
+- Go to <b>File</b> > <b>Add Package Dependencies</b> > <b>Search or Enter Package URL</b>. Type https://github.com/philipturner/applegpuinfo and click <b>Add Package</b>.
+- Select the <b>AppleGPUInfo</b> product of kind <b>Library</b>, then <b>Add Package</b>.
+- Replace the code in `ContentView.swift` with the demonstration below.
+- TODO: Finish this explanation.
+
+<details>
+<summary>iOS Demonstration</summary>
+
+```swift
+
+```
+
+</summary>
+
+-->
 
 ## Attribution
 
