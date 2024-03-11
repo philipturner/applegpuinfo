@@ -22,10 +22,10 @@ Interfaces:
 - Command-line tool
 
 Recognized devices:
-- A7 - A16
-- M1 - M1 Ultra
-- M2 - M2 Max
-- Future devices treated like the closest existing analog (e.g. A17 like A16)
+- A7 - A17 Pro
+- M1 - M2 Ultra
+- M3 - M3 Max
+- Future devices treated like the closest existing analog (e.g. M4 like M3)
 
 ## Usage
 

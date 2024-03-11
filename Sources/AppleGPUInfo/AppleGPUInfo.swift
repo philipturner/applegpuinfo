@@ -196,6 +196,9 @@ public class GPUInfoDevice {
     if name.starts(with: "Apple A") {
       name.removeFirst("Apple A".count)
       
+      if name.count >= 4, name.suffix(4) == " Pro" {
+        name.removeLast(4)
+      }
       if name.last!.isWholeNumber == true {
         // A12, etc.
         tier = .phone
@@ -310,8 +313,9 @@ public class GPUInfoDevice {
           case .iPhoneSE3: _coreCount = 4
           default: _coreCount = 5
           }
-        case 16: fallthrough
-        default: _coreCount = 5
+        case 16: _coreCount = 5
+        case 17: _coreCount = 6
+        default: _coreCount = 6
         }
       } else {
         switch generation {
@@ -343,8 +347,9 @@ public class GPUInfoDevice {
         case 13: _clockFrequency = 1.230e9
         case 14: _clockFrequency = 1.278e9
         case 15: _clockFrequency = 1.338e9
-        case 16: fallthrough
-        default: _clockFrequency = 1.398e9
+        case 16: _clockFrequency = 1.398e9
+        case 17: _clockFrequency = 1.380e9
+        default: _clockFrequency = 1.380e9
         }
       } else {
         switch generation {
@@ -357,17 +362,9 @@ public class GPUInfoDevice {
           case .pro, .max, .ultra: _clockFrequency = 1.296e9
           case .unknown: _clockFrequency = 1.296e9
           }
-        case 2:
-          fallthrough
-        default:
-          switch tier {
-          case .phone: throw GPUInfoError(description: """
-            Unrecognized GPU: \(name)
-            """)
-          case .base: _clockFrequency = 1.398e9
-          case .pro, .max: _clockFrequency = 1.398e9
-          default: _clockFrequency = 1.398e9
-          }
+        case 2: _clockFrequency = 1.398e9
+        case 3: _clockFrequency = 1.380e9
+        default: _clockFrequency = 1.380e9
         }
       }
     }
@@ -413,6 +410,7 @@ public class GPUInfoDevice {
             _bandwidth = dataRate(clock: 2.133e9, bits: 64)
           }
         case 16: fallthrough
+        case 17: fallthrough
         default: _bandwidth = dataRate(clock: 3.200e9, bits: 64)
         }
       } else {
@@ -429,8 +427,6 @@ public class GPUInfoDevice {
           case .unknown: _bandwidth = dataRate(clock: 3.200e9, bits: 1024)
           }
         case 2:
-          fallthrough
-        default:
           switch tier {
           case .phone: throw GPUInfoError(description: """
             Unrecognized GPU: \(name)
@@ -438,6 +434,38 @@ public class GPUInfoDevice {
           case .base: _bandwidth = dataRate(clock: 3.200e9, bits: 128)
           case .pro: _bandwidth = dataRate(clock: 3.200e9, bits: 256)
           case .max: _bandwidth = dataRate(clock: 3.200e9, bits: 512)
+          case .ultra: _bandwidth = dataRate(clock: 3.200e9, bits: 1024)
+          case .unknown: _bandwidth = dataRate(clock: 3.200e9, bits: 1024)
+          }
+        case 3:
+          switch tier {
+          case .phone: throw GPUInfoError(description: """
+            Unrecognized GPU: \(name)
+            """)
+          case .base: _bandwidth = dataRate(clock: 3.200e9, bits: 128)
+          case .pro: _bandwidth = dataRate(clock: 3.200e9, bits: 192)
+          case .max:
+            if _coreCount < 40 {
+              _bandwidth = dataRate(clock: 3.200e9, bits: 384)
+            } else {
+              _bandwidth = dataRate(clock: 3.200e9, bits: 512)
+            }
+          case .ultra: _bandwidth = dataRate(clock: 3.200e9, bits: 1024)
+          case .unknown: _bandwidth = dataRate(clock: 3.200e9, bits: 1024)
+          }
+        default:
+          switch tier {
+          case .phone: throw GPUInfoError(description: """
+            Unrecognized GPU: \(name)
+            """)
+          case .base: _bandwidth = dataRate(clock: 3.200e9, bits: 128)
+          case .pro: _bandwidth = dataRate(clock: 3.200e9, bits: 192)
+          case .max:
+            if _coreCount < 40 {
+              _bandwidth = dataRate(clock: 3.200e9, bits: 384)
+            } else {
+              _bandwidth = dataRate(clock: 3.200e9, bits: 512)
+            }
           case .ultra: _bandwidth = dataRate(clock: 3.200e9, bits: 1024)
           case .unknown: _bandwidth = dataRate(clock: 3.200e9, bits: 1024)
           }
@@ -458,9 +486,10 @@ public class GPUInfoDevice {
         } else {
           alusPerCore = 32
         }
-      } else {
-        // M-series chips.
+      } else if name.contains("Apple M") {
         alusPerCore = 128
+      } else {
+        fatalError("Unrecognized name.")
       }
       
       // Two floating-point operations per FMA.
@@ -471,18 +500,27 @@ public class GPUInfoDevice {
     
     // Cache the instructions per second.
     do {
-      // Number of Int32 ALUs per GPU core.
+      // Number of ALUs that can be simultaneously utilized.
       var alusPerCore: Int
       
+      // Make a rough prediction that Apple9 GPUs can utilize two pipelines
+      // simultaneously, but not all three.
       if name.contains("Apple A") {
-        if generation >= 11 {
+        if generation >= 17 {
+          alusPerCore = 256
+        } else if generation >= 11 {
           alusPerCore = 128
         } else {
           alusPerCore = 64
         }
+      } else if name.contains("Apple M") {
+        if generation >= 3 {
+          alusPerCore = 256
+        } else {
+          alusPerCore = 128
+        }
       } else {
-        // M-series chips.
-        alusPerCore = 128
+        fatalError("Unrecognized name.")
       }
       
       let operationsPerClock = Double(self._coreCount * alusPerCore)
@@ -511,35 +549,18 @@ public class GPUInfoDevice {
         case 13: _systemLevelCache = 16 * megabyte
         case 14: _systemLevelCache = 16 * megabyte
         case 15: _systemLevelCache = 32 * megabyte
-        case 16: fallthrough
         default: _systemLevelCache = 24 * megabyte
         }
       } else {
-        switch generation {
-        case 1:
-          switch tier {
-          case .phone: throw GPUInfoError(description: """
-            Unrecognized GPU: \(name)
-            """)
-          case .base: _systemLevelCache = 8 * megabyte
-          case .pro: _systemLevelCache = 24 * megabyte
-          case .max: _systemLevelCache = 48 * megabyte
-          case .ultra: _systemLevelCache = 96 * megabyte
-          case .unknown: _systemLevelCache = 96 * megabyte
-          }
-        case 2:
-          fallthrough
-        default:
-          switch tier {
-          case .phone: throw GPUInfoError(description: """
-            Unrecognized GPU: \(name)
-            """)
-          case .base: _systemLevelCache = 8 * megabyte
-          case .pro: _systemLevelCache = 24 * megabyte
-          case .max: _systemLevelCache = 48 * megabyte
-          case .ultra: _systemLevelCache = 96 * megabyte
-          case .unknown: _systemLevelCache = 96 * megabyte
-          }
+        switch tier {
+        case .phone: throw GPUInfoError(description: """
+          Unrecognized GPU: \(name)
+          """)
+        case .base: _systemLevelCache = 8 * megabyte
+        case .pro: _systemLevelCache = 24 * megabyte
+        case .max: _systemLevelCache = 48 * megabyte
+        case .ultra: _systemLevelCache = 96 * megabyte
+        case .unknown: _systemLevelCache = 96 * megabyte
         }
       }
     }
@@ -564,8 +585,8 @@ public class GPUInfoDevice {
     
     // Cache the family.
     do {
-      // Apple 8 (1000 + 8)
-      var maxRecognized: MTLGPUFamily = .init(rawValue: 1008)!
+      // Apple 9 (1000 + 9)
+      var maxRecognized: MTLGPUFamily = .init(rawValue: 1009)!
       while maxRecognized.rawValue >= 0 {
         if mtlDevice.supportsFamily(maxRecognized) {
           break
