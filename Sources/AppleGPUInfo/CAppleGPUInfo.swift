@@ -82,15 +82,6 @@ internal func GPUInfoDevice_init(
   return unmanagedDevice.toOpaque()
 }
 
-@_cdecl("GPUInfoDevice_initRegistryID")
-@usableFromInline
-internal func GPUInfoDevice_initRegistryID(
-  _ registryID: UInt64,
-  _ pointerError: UnsafeMutablePointer<UnsafeMutableRawPointer?>
-) -> UnsafeMutableRawPointer? {
-  fatalError("Registry ID initializer is not callable from C yet.")
-}
-
 @_cdecl("GPUInfoDevice_deinit")
 @usableFromInline
 internal func GPUInfoDevice_deinit(

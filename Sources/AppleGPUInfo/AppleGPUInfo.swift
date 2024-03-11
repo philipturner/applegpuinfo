@@ -1,7 +1,5 @@
 import Metal
-#if arch(x86_64)
-import OpenCL
-#elseif os(macOS)
+#if os(macOS)
 import IOKit
 #else
 import DeviceKit
@@ -18,7 +16,7 @@ public class GPUInfoError: Error {
   /// Initialize the error object.
   public init(description: String) {
     self.description = description
-    self._cDescripton = .allocate(capacity: description.count)
+    self._cDescripton = .allocate(capacity: description.count + 1)
     strcpy(_cDescripton, description)
   }
   
@@ -99,9 +97,7 @@ public extension GPUInfoDevice {
 public class GPUInfoDevice {
   // Objects for querying parameters.
   internal let mtlDevice: MTLDevice
-#if arch(x86_64)
-  // TODO: Property for the OpenCL device
-#elseif os(macOS)
+#if os(macOS)
   internal let gpuEntry: io_registry_entry_t
 #else
   internal let deviceKitDevice: Device
@@ -127,92 +123,32 @@ public class GPUInfoDevice {
   ///
   /// Creating a `GPUInfoDevice` is a costly operation. If possible, create one
   /// object and use it multiple times.
-  public convenience init() throws {
-    try self.init(_registryID: nil)
-  }
-  
-  // TODO: Document this in the Swift and C APIs, add to the C header.
-  public convenience init(registryID: UInt64) throws {
-    try self.init(_registryID: registryID)
-  }
-  
-  private init(_registryID: UInt64?) throws {
-    // Intel Macs may have multiple GPUs. The simplest way to let the user
-    // choose is through a registry ID environment variable. This code path
-    // should also activate on Apple chips for debugging purposes.
-    var registryID: UInt64?
-    if let cString = getenv("GPUINFO_REGISTRY_ID") {
-      let stringValue = String(cString: cString)
-      guard let integerValue = UInt64(stringValue) else {
-        let message = "Invalid registry ID: '\(stringValue)'"
-        throw GPUInfoError(description: message)
-      }
-      registryID = integerValue
-    }
-    
-    // The function parameter should override the environment variable.
-    registryID = _registryID ?? registryID
-    
+  public init() throws {
 #if os(macOS)
     let devices = MTLCopyAllDevices()
-    var selectedDevice = devices.first!
-    for device in devices {
-      var newDevice: MTLDevice
-      if let registryID {
-        guard device.registryID == registryID else {
-          continue
-        }
-        newDevice = device
-      } else {
-        // If there is an AMD GPU, choose it over the Intel GPU. If there are
-        // multiple AMD GPUs, this logic statement chooses the first one.
-        guard !device.isLowPower && selectedDevice.isLowPower else {
-          continue
-        }
-        newDevice = device
-      }
-      selectedDevice = newDevice
+    guard let selectedDevice = devices.first else {
+      fatalError("No devices are available.")
     }
     self.mtlDevice = selectedDevice
 #else
     self.mtlDevice = MTLCreateSystemDefaultDevice()!
 #endif
     
-    // If specified, ensure a device matching the registry ID was found.
-    if let registryID {
-      guard mtlDevice.registryID == registryID else {
-        var message = "Could not find device matching registry ID:"
-        message += " '\(registryID)'."
-        throw GPUInfoError(description: message)
-      }
-    }
-    
     // Cache the name.
     do {
       self._name = mtlDevice.name
-      self._cName = .allocate(capacity: _name.count)
+      self._cName = .allocate(capacity: _name.count + 1)
       strcpy(_cName, _name)
     }
     
     // Cache the vendor.
     do {
-#if arch(x86_64)
-      if mtlDevice.isLowPower {
-        self._vendor = "Intel"
-      } else {
-        self._vendor = "AMD"
-      }
-#else
       self._vendor = "Apple"
-#endif
-      self._cVendor = .allocate(capacity: _vendor.count)
+      self._cVendor = .allocate(capacity: _vendor.count + 1)
       strcpy(_cVendor, _vendor)
     }
     
-#if arch(x86_64)
-    // Use OpenCL to query device properties.
-    fatalError("Intel Macs are not supported yet.")
-#elseif os(macOS)
+#if os(macOS)
     // Create a matching dictionary with "AGXAccelerator" class name
     let matchingDict = IOServiceMatching("AGXAccelerator")
     
@@ -260,6 +196,9 @@ public class GPUInfoDevice {
     if name.starts(with: "Apple A") {
       name.removeFirst("Apple A".count)
       
+      if name.count >= 4, name.suffix(4) == " Pro" {
+        name.removeLast(4)
+      }
       if name.last!.isWholeNumber == true {
         // A12, etc.
         tier = .phone
@@ -304,9 +243,7 @@ public class GPUInfoDevice {
     
     // Cache the core count.
     do {
-#if arch(x86_64)
-      
-#elseif os(macOS)
+#if os(macOS)
       // Get the "gpu-core-count" property from gpuEntry
       let key = "gpu-core-count"
       let options: IOOptionBits = 0 // No options needed
@@ -376,8 +313,9 @@ public class GPUInfoDevice {
           case .iPhoneSE3: _coreCount = 4
           default: _coreCount = 5
           }
-        case 16: fallthrough
-        default: _coreCount = 5
+        case 16: _coreCount = 5
+        case 17: _coreCount = 6
+        default: _coreCount = 6
         }
       } else {
         switch generation {
@@ -409,8 +347,9 @@ public class GPUInfoDevice {
         case 13: _clockFrequency = 1.230e9
         case 14: _clockFrequency = 1.278e9
         case 15: _clockFrequency = 1.338e9
-        case 16: fallthrough
-        default: _clockFrequency = 1.398e9
+        case 16: _clockFrequency = 1.398e9
+        case 17: _clockFrequency = 1.380e9
+        default: _clockFrequency = 1.380e9
         }
       } else {
         switch generation {
@@ -423,17 +362,9 @@ public class GPUInfoDevice {
           case .pro, .max, .ultra: _clockFrequency = 1.296e9
           case .unknown: _clockFrequency = 1.296e9
           }
-        case 2:
-          fallthrough
-        default:
-          switch tier {
-          case .phone: throw GPUInfoError(description: """
-            Unrecognized GPU: \(name)
-            """)
-          case .base: _clockFrequency = 1.398e9
-          case .pro, .max: _clockFrequency = 1.398e9
-          default: _clockFrequency = 1.398e9
-          }
+        case 2: _clockFrequency = 1.398e9
+        case 3: _clockFrequency = 1.380e9
+        default: _clockFrequency = 1.380e9
         }
       }
     }
@@ -479,6 +410,7 @@ public class GPUInfoDevice {
             _bandwidth = dataRate(clock: 2.133e9, bits: 64)
           }
         case 16: fallthrough
+        case 17: fallthrough
         default: _bandwidth = dataRate(clock: 3.200e9, bits: 64)
         }
       } else {
@@ -495,8 +427,6 @@ public class GPUInfoDevice {
           case .unknown: _bandwidth = dataRate(clock: 3.200e9, bits: 1024)
           }
         case 2:
-          fallthrough
-        default:
           switch tier {
           case .phone: throw GPUInfoError(description: """
             Unrecognized GPU: \(name)
@@ -504,6 +434,38 @@ public class GPUInfoDevice {
           case .base: _bandwidth = dataRate(clock: 3.200e9, bits: 128)
           case .pro: _bandwidth = dataRate(clock: 3.200e9, bits: 256)
           case .max: _bandwidth = dataRate(clock: 3.200e9, bits: 512)
+          case .ultra: _bandwidth = dataRate(clock: 3.200e9, bits: 1024)
+          case .unknown: _bandwidth = dataRate(clock: 3.200e9, bits: 1024)
+          }
+        case 3:
+          switch tier {
+          case .phone: throw GPUInfoError(description: """
+            Unrecognized GPU: \(name)
+            """)
+          case .base: _bandwidth = dataRate(clock: 3.200e9, bits: 128)
+          case .pro: _bandwidth = dataRate(clock: 3.200e9, bits: 192)
+          case .max:
+            if _coreCount < 40 {
+              _bandwidth = dataRate(clock: 3.200e9, bits: 384)
+            } else {
+              _bandwidth = dataRate(clock: 3.200e9, bits: 512)
+            }
+          case .ultra: _bandwidth = dataRate(clock: 3.200e9, bits: 1024)
+          case .unknown: _bandwidth = dataRate(clock: 3.200e9, bits: 1024)
+          }
+        default:
+          switch tier {
+          case .phone: throw GPUInfoError(description: """
+            Unrecognized GPU: \(name)
+            """)
+          case .base: _bandwidth = dataRate(clock: 3.200e9, bits: 128)
+          case .pro: _bandwidth = dataRate(clock: 3.200e9, bits: 192)
+          case .max:
+            if _coreCount < 40 {
+              _bandwidth = dataRate(clock: 3.200e9, bits: 384)
+            } else {
+              _bandwidth = dataRate(clock: 3.200e9, bits: 512)
+            }
           case .ultra: _bandwidth = dataRate(clock: 3.200e9, bits: 1024)
           case .unknown: _bandwidth = dataRate(clock: 3.200e9, bits: 1024)
           }
@@ -524,9 +486,10 @@ public class GPUInfoDevice {
         } else {
           alusPerCore = 32
         }
-      } else {
-        // M-series chips.
+      } else if name.contains("Apple M") {
         alusPerCore = 128
+      } else {
+        fatalError("Unrecognized name.")
       }
       
       // Two floating-point operations per FMA.
@@ -537,18 +500,27 @@ public class GPUInfoDevice {
     
     // Cache the instructions per second.
     do {
-      // Number of Int32 ALUs per GPU core.
+      // Number of ALUs that can be simultaneously utilized.
       var alusPerCore: Int
       
+      // Make a rough prediction that Apple9 GPUs can utilize two pipelines
+      // simultaneously, but not all three.
       if name.contains("Apple A") {
-        if generation >= 11 {
+        if generation >= 17 {
+          alusPerCore = 256
+        } else if generation >= 11 {
           alusPerCore = 128
         } else {
           alusPerCore = 64
         }
+      } else if name.contains("Apple M") {
+        if generation >= 3 {
+          alusPerCore = 256
+        } else {
+          alusPerCore = 128
+        }
       } else {
-        // M-series chips.
-        alusPerCore = 128
+        fatalError("Unrecognized name.")
       }
       
       let operationsPerClock = Double(self._coreCount * alusPerCore)
@@ -577,35 +549,18 @@ public class GPUInfoDevice {
         case 13: _systemLevelCache = 16 * megabyte
         case 14: _systemLevelCache = 16 * megabyte
         case 15: _systemLevelCache = 32 * megabyte
-        case 16: fallthrough
         default: _systemLevelCache = 24 * megabyte
         }
       } else {
-        switch generation {
-        case 1:
-          switch tier {
-          case .phone: throw GPUInfoError(description: """
-            Unrecognized GPU: \(name)
-            """)
-          case .base: _systemLevelCache = 8 * megabyte
-          case .pro: _systemLevelCache = 24 * megabyte
-          case .max: _systemLevelCache = 48 * megabyte
-          case .ultra: _systemLevelCache = 96 * megabyte
-          case .unknown: _systemLevelCache = 96 * megabyte
-          }
-        case 2:
-          fallthrough
-        default:
-          switch tier {
-          case .phone: throw GPUInfoError(description: """
-            Unrecognized GPU: \(name)
-            """)
-          case .base: _systemLevelCache = 8 * megabyte
-          case .pro: _systemLevelCache = 24 * megabyte
-          case .max: _systemLevelCache = 48 * megabyte
-          case .ultra: _systemLevelCache = 96 * megabyte
-          case .unknown: _systemLevelCache = 96 * megabyte
-          }
+        switch tier {
+        case .phone: throw GPUInfoError(description: """
+          Unrecognized GPU: \(name)
+          """)
+        case .base: _systemLevelCache = 8 * megabyte
+        case .pro: _systemLevelCache = 24 * megabyte
+        case .max: _systemLevelCache = 48 * megabyte
+        case .ultra: _systemLevelCache = 96 * megabyte
+        case .unknown: _systemLevelCache = 96 * megabyte
         }
       }
     }
@@ -630,8 +585,8 @@ public class GPUInfoDevice {
     
     // Cache the family.
     do {
-      // Apple 8 (1000 + 8)
-      var maxRecognized: MTLGPUFamily = .init(rawValue: 1008)!
+      // Apple 9 (1000 + 9)
+      var maxRecognized: MTLGPUFamily = .init(rawValue: 1009)!
       while maxRecognized.rawValue >= 0 {
         if mtlDevice.supportsFamily(maxRecognized) {
           break
