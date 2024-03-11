@@ -25,65 +25,6 @@ class GPUInfoDeviceTests: XCTestCase {
     super.tearDown()
   }
   
-  // Test if the registry ID is valid.
-  func testRegistryIDIsValid() {
-    // TODO: Ensure the device can be initialized both with and without the
-    // registry ID environment variable. Someone may have set that variable for
-    // this test, so remove the current value and restore it afterward.
-    let key = "GPUINFO_REGISTRY_ID"
-    var currentRegistryID: String?
-    if let cString = getenv(key) {
-      currentRegistryID = String(cString: cString)
-      unsetenv(key)
-    }
-    
-    XCTAssertNoThrow(try GPUInfoDevice())
-    setenv(key, "abcd", 1)
-    XCTAssertThrowsError(try GPUInfoDevice())
-    
-    // Ensure it throws and error through the C API.
-    var error: UnsafeMutableRawPointer?
-    if let cDevice = GPUInfoDevice_init(&error) {
-      GPUInfoDevice_deinit(cDevice)
-    }
-    XCTAssertNotNil(error)
-    if let error {
-      let description = String(cString: GPUInfoError_description(error))
-      let expected = "Invalid registry ID:"
-      XCTAssertEqual(String(description.prefix(expected.count)), expected)
-      GPUInfoError_deinit(error)
-    }
-    error = nil
-    
-#if os(macOS)
-    let mtlDevice = MTLCopyAllDevices().last!
-#else
-    let mtlDevice = MTLCreateSystemDefaultDevice()!
-#endif
-    
-    // Ensure a nonexistent registry ID is considered invalid.
-    setenv(key, String(mtlDevice.registryID ^ 1), 1)
-    if let cDevice = GPUInfoDevice_init(&error) {
-      GPUInfoDevice_deinit(cDevice)
-    }
-    XCTAssertNotNil(error)
-    if let error {
-      let description = String(cString: GPUInfoError_description(error))
-      let expected = "Could not find device matching registry ID:"
-      XCTAssertEqual(String(description.prefix(expected.count)), expected)
-      GPUInfoError_deinit(error)
-    }
-    error = nil
-    
-    // Ensure an existing registry ID is considered valid.
-    setenv(key, String(mtlDevice.registryID), 1)
-    XCTAssertNoThrow(try GPUInfoDevice())
-    
-    if let currentRegistryID {
-      setenv(key, currentRegistryID, 1)
-    }
-  }
-  
   // Test if the name is valid
   func testNameIsValid() {
     // Act: get the name property
@@ -102,7 +43,7 @@ class GPUInfoDeviceTests: XCTestCase {
     let cVendor = GPUInfoDevice_vendor(cDevice)
     
     // Assert: check that the vendor is "Apple"
-    let validVendors = ["Apple", "AMD", "Intel"]
+    let validVendors = ["Apple"]
     XCTAssert(validVendors.contains(vendor))
     XCTAssert(validVendors.contains(String(cString: cVendor)))
   }

@@ -1,7 +1,5 @@
 import Metal
-#if arch(x86_64)
-import OpenCL
-#elseif os(macOS)
+#if os(macOS)
 import IOKit
 #else
 import DeviceKit
@@ -99,9 +97,7 @@ public extension GPUInfoDevice {
 public class GPUInfoDevice {
   // Objects for querying parameters.
   internal let mtlDevice: MTLDevice
-#if arch(x86_64)
-  // TODO: Property for the OpenCL device
-#elseif os(macOS)
+#if os(macOS)
   internal let gpuEntry: io_registry_entry_t
 #else
   internal let deviceKitDevice: Device
@@ -127,65 +123,16 @@ public class GPUInfoDevice {
   ///
   /// Creating a `GPUInfoDevice` is a costly operation. If possible, create one
   /// object and use it multiple times.
-  public convenience init() throws {
-    try self.init(_registryID: nil)
-  }
-  
-  // TODO: Document this in the Swift and C APIs, add to the C header.
-  public convenience init(registryID: UInt64) throws {
-    try self.init(_registryID: registryID)
-  }
-  
-  private init(_registryID: UInt64?) throws {
-    // Intel Macs may have multiple GPUs. The simplest way to let the user
-    // choose is through a registry ID environment variable. This code path
-    // should also activate on Apple chips for debugging purposes.
-    var registryID: UInt64?
-    if let cString = getenv("GPUINFO_REGISTRY_ID") {
-      let stringValue = String(cString: cString)
-      guard let integerValue = UInt64(stringValue) else {
-        let message = "Invalid registry ID: '\(stringValue)'"
-        throw GPUInfoError(description: message)
-      }
-      registryID = integerValue
-    }
-    
-    // The function parameter should override the environment variable.
-    registryID = _registryID ?? registryID
-    
+  public init() throws {
 #if os(macOS)
     let devices = MTLCopyAllDevices()
-    var selectedDevice = devices.first!
-    for device in devices {
-      var newDevice: MTLDevice
-      if let registryID {
-        guard device.registryID == registryID else {
-          continue
-        }
-        newDevice = device
-      } else {
-        // If there is an AMD GPU, choose it over the Intel GPU. If there are
-        // multiple AMD GPUs, this logic statement chooses the first one.
-        guard !device.isLowPower && selectedDevice.isLowPower else {
-          continue
-        }
-        newDevice = device
-      }
-      selectedDevice = newDevice
+    guard let selectedDevice = devices.first else {
+      fatalError("No devices are available.")
     }
     self.mtlDevice = selectedDevice
 #else
     self.mtlDevice = MTLCreateSystemDefaultDevice()!
 #endif
-    
-    // If specified, ensure a device matching the registry ID was found.
-    if let registryID {
-      guard mtlDevice.registryID == registryID else {
-        var message = "Could not find device matching registry ID:"
-        message += " '\(registryID)'."
-        throw GPUInfoError(description: message)
-      }
-    }
     
     // Cache the name.
     do {
@@ -196,23 +143,12 @@ public class GPUInfoDevice {
     
     // Cache the vendor.
     do {
-#if arch(x86_64)
-      if mtlDevice.isLowPower {
-        self._vendor = "Intel"
-      } else {
-        self._vendor = "AMD"
-      }
-#else
       self._vendor = "Apple"
-#endif
       self._cVendor = .allocate(capacity: _vendor.count)
       strcpy(_cVendor, _vendor)
     }
     
-#if arch(x86_64)
-    // Use OpenCL to query device properties.
-    fatalError("Intel Macs are not supported yet.")
-#elseif os(macOS)
+#if os(macOS)
     // Create a matching dictionary with "AGXAccelerator" class name
     let matchingDict = IOServiceMatching("AGXAccelerator")
     
@@ -304,9 +240,7 @@ public class GPUInfoDevice {
     
     // Cache the core count.
     do {
-#if arch(x86_64)
-      
-#elseif os(macOS)
+#if os(macOS)
       // Get the "gpu-core-count" property from gpuEntry
       let key = "gpu-core-count"
       let options: IOOptionBits = 0 // No options needed
