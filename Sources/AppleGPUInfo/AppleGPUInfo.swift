@@ -16,7 +16,7 @@ public class GPUInfoError: Error {
   /// Initialize the error object.
   public init(description: String) {
     self.description = description
-    self._cDescripton = .allocate(capacity: description.count)
+    self._cDescripton = .allocate(capacity: description.count + 1)
     strcpy(_cDescripton, description)
   }
   
@@ -137,14 +137,14 @@ public class GPUInfoDevice {
     // Cache the name.
     do {
       self._name = mtlDevice.name
-      self._cName = .allocate(capacity: _name.count)
+      self._cName = .allocate(capacity: _name.count + 1)
       strcpy(_cName, _name)
     }
     
     // Cache the vendor.
     do {
       self._vendor = "Apple"
-      self._cVendor = .allocate(capacity: _vendor.count)
+      self._cVendor = .allocate(capacity: _vendor.count + 1)
       strcpy(_cVendor, _vendor)
     }
     
