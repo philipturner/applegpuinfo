@@ -82,11 +82,12 @@ This framework is confirmed to work on the following devices. If anyone wishes t
 
 | Production Year | Chip | Cores | SLC | Memory | Bandwidth | TFLOPS |
 | --------------- | --- | ----- | ------ | ---- | --------- | ------ |
-| 2017 | A10X     | 12 | 0 MB  |    4 GB |  68.2 GB/s |  0.768 |
+| 2017 | A10X     | 12 |  0 MB |    4 GB |  68.2 GB/s |  0.768 |
 | 2021 | A15      |  5 | 32 MB | 5.49 GB |  34.1 GB/s |  1.713 |
 | 2021 | M1 Pro   | 16 | 24 MB |   32 GB | 204.8 GB/s |  5.308 |
 | 2021 | M1 Max   | 32 | 48 MB |   32 GB | 409.6 GB/s | 10.617 |
 | 2022 | M1 Ultra | 48 | 96 MB |   64 GB | 819.2 GB/s | 15.925 |
+| 2022 | M2       | 10 |  8 MB |   16 GB | 102.4 GB/s |  3.579 |
 | 2023 | M2 Pro   | 19 | 24 MB |   16 GB | 204.8 GB/s |  6.800 |
 | 2023 | M2 Pro   | 19 | 24 MB |   32 GB | 204.8 GB/s |  6.800 |
 
