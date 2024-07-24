@@ -87,6 +87,7 @@ sudo powermetrics --sample-rate 500 --samplers gpu_power
 | Production Year | Chip | Cores | SLC | Memory | Bandwidth | TFLOPS |
 | --------------- | --- | ----- | ------ | ---- | --------- | ------ |
 | 2017 | A10X     | 12 |  0 MB |    4 GB |  68.2 GB/s |  0.768 |
+| 2020 | A14      |  4 | 16 MB | 5.54 GB |  34.1 GB/s |  0.654 |
 | 2021 | A15      |  5 | 32 MB | 5.49 GB |  34.1 GB/s |  1.713 |
 | 2021 | M1 Pro   | 14 | 24 MB |   16 GB | 204.8 GB/s |  4.645 |
 | 2021 | M1 Pro   | 16 | 24 MB |   32 GB | 204.8 GB/s |  5.308 |
