@@ -25,7 +25,8 @@ Recognized devices:
 - A7 - A17 Pro
 - M1 - M2 Ultra
 - M3 - M3 Max
-- Future devices treated like the closest existing analog (e.g. M4 like M3)
+- M4 - M4 Max (with LPDDR5X-8533 memory support)
+- Future devices treated like the closest existing analog
 
 ## Usage
 
@@ -47,6 +48,18 @@ GPU IPS: 5.308 TIPS
 GPU system level cache: 48 MB
 GPU memory: 32 GB
 GPU family: Apple 7
+
+# Sample output (M4 Max)
+GPU name: Apple M4 Max
+GPU vendor: Apple
+GPU core count: 40
+GPU clock frequency: 1.38 GHz
+GPU bandwidth: 546.0 GB/s
+GPU FLOPS: 14.131 TFLOPS
+GPU IPS: 14.131 TIPS
+GPU system level cache: 48 MB
+GPU memory: 128 GB
+GPU family: Apple 9
 ```
 
 You can also use it directly from Swift:
