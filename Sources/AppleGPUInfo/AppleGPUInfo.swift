@@ -453,21 +453,28 @@ public class GPUInfoDevice {
           case .ultra: _bandwidth = dataRate(clock: 3.200e9, bits: 1024)
           case .unknown: _bandwidth = dataRate(clock: 3.200e9, bits: 1024)
           }
+        case 4:
+          // M4 generation uses LPDDR5X-8533 memory
+          switch tier {
+          case .phone: throw GPUInfoError(description: """
+            Unrecognized GPU: \(name)
+            """)
+          case .base: _bandwidth = dataRate(clock: 4.266e9, bits: 128)
+          case .pro: _bandwidth = dataRate(clock: 4.266e9, bits: 256)
+          case .max: _bandwidth = dataRate(clock: 4.266e9, bits: 512)
+          case .ultra: _bandwidth = dataRate(clock: 4.266e9, bits: 1024)
+          case .unknown: _bandwidth = dataRate(clock: 4.266e9, bits: 1024)
+          }
         default:
           switch tier {
           case .phone: throw GPUInfoError(description: """
             Unrecognized GPU: \(name)
             """)
-          case .base: _bandwidth = dataRate(clock: 3.200e9, bits: 128)
-          case .pro: _bandwidth = dataRate(clock: 3.200e9, bits: 192)
-          case .max:
-            if _coreCount < 40 {
-              _bandwidth = dataRate(clock: 3.200e9, bits: 384)
-            } else {
-              _bandwidth = dataRate(clock: 3.200e9, bits: 512)
-            }
-          case .ultra: _bandwidth = dataRate(clock: 3.200e9, bits: 1024)
-          case .unknown: _bandwidth = dataRate(clock: 3.200e9, bits: 1024)
+          case .base: _bandwidth = dataRate(clock: 4.266e9, bits: 128)
+          case .pro: _bandwidth = dataRate(clock: 4.266e9, bits: 256)
+          case .max: _bandwidth = dataRate(clock: 4.266e9, bits: 512)
+          case .ultra: _bandwidth = dataRate(clock: 4.266e9, bits: 1024)
+          case .unknown: _bandwidth = dataRate(clock: 4.266e9, bits: 1024)
           }
         }
       }
